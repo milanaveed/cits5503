@@ -2,8 +2,8 @@
 
   <h2>Labs 1-5</h2>
   
-  <p>Student ID: [Student ID]</p>
-  <p>Student Name: [First and Surname]</p>
+  <p>Student ID: 22756463</p>
+  <p>Student Name: Mila (Yue) Zhang</p>
 
 </div>
 
@@ -11,13 +11,17 @@
 
 ## AWS Account and Log in
 
-### [1] Log into an IAM user account created for you on AWS.
+### [1] Log into an IAM user account
+After opening the [login page](https://489389878001.signin.aws.amazon.com/console), I entered my IAM user name "22756463@student.uwa.edu.au" and the initial password provided by the Unit Coordinator. Then I changed my password after login.
 
-[Refer to the marking rubrics for sufficient step-by-step description.]
+![login](Screenshot%202024-08-15%20141248.png)
+
+![console](image.png)
 
 ### [2] Search and open Identity Access Management
+After clicking my user account and selecting the Security Credentials tab, I created an access key and noted the Access Key ID and the secret access key down.
 
-[Refer to the marking rubrics for sufficient step-by-step description.]
+![alt text](image-1.png)
 
 ## Set up recent Linux OSes
 
