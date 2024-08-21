@@ -38,7 +38,7 @@ Since there was an old version of WSL installed on my laptop, I used command `ws
 ### [1] Install Python 3.8.x and above
 Since the recent Ubuntu versions such as 22.04.3 LTS have Python 3.8.x installed, I updated the packages to obtain the latest version through commands `sudo apt update` and `sudo apt -y upgrade`. After checking the latest version through command `python3 -V`, now we can see I have version `Python 3.10.12` installed. Then I installed pip3 through command `sudo apt install -y python3-pip` for future Python library management.
 
-#### Explanation of commands:
+#### Commands:
 - `sudo`: allows us to run the command with elevated (root) privileges.
 - `apt`: the command-line tool used to interact with the Advanced Package Tool (APT), the package management system used by Debian-based distributions. APT manages the installation, upgrade, and removal of software packages.
 - `-y`: automatically answers "yes" to any prompts that might come up during the upgrade process.
@@ -46,7 +46,7 @@ Since the recent Ubuntu versions such as 22.04.3 LTS have Python 3.8.x installed
 ### [2] Install awscli
 `awscli` stands for Amazon Web Services Command Line Interface. It's a unified tool that provides a consistent interface for interacting with all of Amazon Web Services (AWS). I installed and updated awscli through commands `sudo apt install awscli` and `pip3 install awscli --upgrade`.
 
-#### Explanation of commands:
+#### Commands:
 - `sudo`: allows us to run the command with elevated (root) privileges.
 - `apt`: the command-line tool used to interact with the Advanced Package Tool (APT), the package management system used by Debian-based distributions. APT manages the installation, upgrade, and removal of software packages.
 - `pip3`: package installer for Python 3 which allows us to install and manage Python packages.
@@ -98,18 +98,44 @@ python3
 >>> response = ec2.describe_regions()
 >>> print(response)
 ```
-- 
+- `import boto3`: imports the "boto3" library which is the AWS Software Development Kit for Python. After importing the package, our Python scripts can interact with AWS services.
+- `ec2 = boto3.client('ec2)`: creates a client object for the EC2 service so we can make specific requests to the EC2 service.
+- `response = ec2.describe_regions()`: calls the "describe_regions()" method of the EC2 client object and saves the returned information into a variable called "response".
+- `print(response)`: prints out the variable "response" which is a dictionary containing information about the regions.
 
 #### Results
 ```
 {'Regions': [{'Endpoint': 'ec2.ap-south-1.amazonaws.com', 'RegionName': 'ap-south-1', 'OptInStatus': 'opt-in-not-required'}, {'Endpoint': 'ec2.eu-north-1.amazonaws.com', 'RegionName': 'eu-north-1', 'OptInStatus': 'opt-in-not-required'}, {'Endpoint': 'ec2.eu-west-3.amazonaws.com', 'RegionName': 'eu-west-3', 'OptInStatus': 'opt-in-not-required'}, {'Endpoint': 'ec2.eu-west-2.amazonaws.com', 'RegionName': 'eu-west-2', 'OptInStatus': 'opt-in-not-required'}, {'Endpoint': 'ec2.eu-west-1.amazonaws.com', 'RegionName': 'eu-west-1', 'OptInStatus': 'opt-in-not-required'}, {'Endpoint': 'ec2.ap-northeast-3.amazonaws.com', 'RegionName': 'ap-northeast-3', 'OptInStatus': 'opt-in-not-required'}, {'Endpoint': 'ec2.ap-northeast-2.amazonaws.com', 'RegionName': 'ap-northeast-2', 'OptInStatus': 'opt-in-not-required'}, {'Endpoint': 'ec2.ap-northeast-1.amazonaws.com', 'RegionName': 'ap-northeast-1', 'OptInStatus': 'opt-in-not-required'}, {'Endpoint': 'ec2.ca-central-1.amazonaws.com', 'RegionName': 'ca-central-1', 'OptInStatus': 'opt-in-not-required'}, {'Endpoint': 'ec2.sa-east-1.amazonaws.com', 'RegionName': 'sa-east-1', 'OptInStatus': 'opt-in-not-required'}, {'Endpoint': 'ec2.ap-southeast-1.amazonaws.com', 'RegionName': 'ap-southeast-1', 'OptInStatus': 'opt-in-not-required'}, {'Endpoint': 'ec2.ap-southeast-2.amazonaws.com', 'RegionName': 'ap-southeast-2', 'OptInStatus': 'opt-in-not-required'}, {'Endpoint': 'ec2.eu-central-1.amazonaws.com', 'RegionName': 'eu-central-1', 'OptInStatus': 'opt-in-not-required'}, {'Endpoint': 'ec2.us-east-1.amazonaws.com', 'RegionName': 'us-east-1', 'OptInStatus': 'opt-in-not-required'}, {'Endpoint': 'ec2.us-east-2.amazonaws.com', 'RegionName': 'us-east-2', 'OptInStatus': 'opt-in-not-required'}, {'Endpoint': 'ec2.us-west-1.amazonaws.com', 'RegionName': 'us-west-1', 'OptInStatus': 'opt-in-not-required'}, {'Endpoint': 'ec2.us-west-2.amazonaws.com', 'RegionName': 'us-west-2', 'OptInStatus': 'opt-in-not-required'}], 'ResponseMetadata': {'RequestId': '4a4ee39e-9960-4855-855f-1d1d31c7d4ed', 'HTTPStatusCode': 200, 'HTTPHeaders': {'x-amzn-requestid': '4a4ee39e-9960-4855-855f-1d1d31c7d4ed', 'cache-control': 'no-cache, no-store', 'strict-transport-security': 'max-age=31536000; includeSubDomains', 'vary': 'accept-encoding', 'content-type': 'text/xml;charset=UTF-8', 'content-length': '2890', 'date': 'Wed, 21 Aug 2024 12:57:45 GMT', 'server': 'AmazonEC2'}, 'RetryAttempts': 0}}
 ```
-![alt text](image-6.png)
 
 ### [3] Write a Python script
+To tabulate the above returned response, I used the Python code below.
 
-[Refer to the marking rubrics for sufficient step-by-step description.]
+#### Commands
+- `pip3 install tabulate`: Since the package "tabulate" was not installed before, I install the library first, so we can easily format tabular data by using functions of this library.
 
+```python
+import boto3
+from tabulate import tabulate
+
+# Create an EC2 client object
+ec2 = boto3.client('ec2')
+
+# Call the describe_regions method and store in the variable response
+response = ec2.describe_regions()
+
+# This list comprehension iterates over each dictionary in "response['Regions']". Then it extracts the Endpoint and RegionName from each dictionary and stores them as a list of tuples
+content = [(region['Endpoint'], region['RegionName']) for region in response['Regions']]
+
+# Define the column names for the table
+col_names = ["Endpoint", "RegionName"]
+
+# Print the table using tabulate
+print(tabulate(content, col_names, tablefmt="pretty"))
+```
+
+#### Results
+![alt text](image-8.png)
 
 
 
