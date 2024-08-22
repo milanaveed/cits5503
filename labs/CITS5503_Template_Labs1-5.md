@@ -138,10 +138,53 @@ print(tabulate(content, col_names, tablefmt="pretty"))
 ![alt text](image-8.png)
 
 
-
 <div style="page-break-after: always;"></div>
 
 # Lab 2
+
+## Create an EC2 instance using awscli
+
+
+### [1] Create a security group
+I created a new security group in Amazon EC2 through the command `aws ec2 create-security-group --group-name 22756463-sg --description "security group for development environment"`. This security group will act as virtual firewalls to control inbound and outbound traffic (traffic coming into the instances and traffic going out from the instances) to the EC2 instances.
+
+#### Commands
+- `aws ec2`: refers to the AWS EC2 service. By specifying this, we are using the AWS EC2 service through the command line.
+- `create-security-group`: the action we are doing given this command line. It creates a new security group in the default VPC (Virtual Private Cloud) given VPC is not specified in this case.
+- `--group-name`: this flag is used to specify the name of the security group. 
+- `-sg`: "sg" stands for security group. This suffix is a common convention to specify that this is a security group.
+- `--description`: this flag is used to set the description for the security group, so we can identify the purpose of this security group later.
+
+### [2] Authorise inbound traffic for ssh
+
+### [3] Create a key pair
+
+### [4] Create the instance
+
+### [5] Add a tag to your Instance
+
+### [6] Get the public IP address
+
+### [7] Connect to the instance via ssh
+
+### [8] List the created instance using the AWS console
+
+## Create an EC2 instance with Python Boto3
+
+## Use Docker inside a Linux OS
+
+### [1] Install Docker
+
+### [2] Start Docker
+
+### [3] Enable Docker
+
+### [4] Check the version
+
+### [5] Build and run an httpd container
+
+### [6] Other docker commands
+
 
 <div style="page-break-after: always;"></div>
 
