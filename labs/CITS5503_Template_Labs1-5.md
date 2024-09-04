@@ -154,8 +154,19 @@ I created a new security group in Amazon EC2 through the command `aws ec2 create
 - `--group-name`: this flag is used to specify the name of the security group. 
 - `-sg`: "sg" stands for security group. This suffix is a common convention to specify that this is a security group.
 - `--description`: this flag is used to set the description for the security group, so we can identify the purpose of this security group later.
+  
+#### Results
+Created a security group named "22756463-sg".
 
 ### [2] Authorise inbound traffic for ssh
+
+
+#### Commands
+- `aws ec2 authorize-security-group-ingress`: this is used to add a rule to an existing security group to allow inbound traffic.
+
+
+#### Results
+
 
 ### [3] Create a key pair
 
@@ -168,6 +179,7 @@ I created a new security group in Amazon EC2 through the command `aws ec2 create
 ### [7] Connect to the instance via ssh
 
 ### [8] List the created instance using the AWS console
+
 
 ## Create an EC2 instance with Python Boto3
 
