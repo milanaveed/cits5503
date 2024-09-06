@@ -7,7 +7,7 @@ response = client.authorize_security_group_ingress(
     CidrIp='0.0.0.0/0',
     FromPort=22,
     # GroupId='string',
-    GroupName='22756463-sg2',
+    GroupName='22756463-sg',
     IpProtocol='tcp',
     ToPort=22,
 )

@@ -5,7 +5,7 @@ client = boto3.client('ec2')
 
 response = client.create_security_group(
     Description='security group for development environment',
-    GroupName='22756463-sg2',
+    GroupName='22756463-sg',
     TagSpecifications=[
         {
             'ResourceType': 'security-group',
