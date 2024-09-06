@@ -5,12 +5,11 @@ from botocore.exceptions import ClientError
 ec2 = boto3.client('ec2')
 
 # Step 1: Create a security group
-def create_security_group(group_name, description, vpc_id):
+def create_security_group(group_name, description):
     try:
         response = ec2.create_security_group(
             GroupName=group_name,
             Description=description,
-            VpcId=vpc_id
         )
         security_group_id = response['GroupId']
         print(f'Security Group {group_name} created with ID: {security_group_id}')
@@ -20,10 +19,12 @@ def create_security_group(group_name, description, vpc_id):
         return None
 
 # Step 2: Authorise inbound traffic for SSH
-def authorize_security_group_ingress(group_id):
+def authorize_security_group_ingress(group_name):
     try:
         ec2.authorize_security_group_ingress(
-            GroupId=group_id,
+            GroupName= group_name,
+            # CidrIp='0.0.0.0/0',
+            # GroupId=group_id,
             IpPermissions=[
                 {
                     'IpProtocol': 'tcp',
@@ -33,7 +34,7 @@ def authorize_security_group_ingress(group_id):
                 }
             ]
         )
-        print(f"SSH rule added to Security Group ID: {group_id}")
+        print(f"SSH rule added to Security Group: {group_name}")
     except ClientError as e:
         print(f"Error adding SSH rule to security group: {e}")
 
@@ -48,19 +49,21 @@ def create_key_pair(key_name):
             key_file.write(private_key)
         
         print(f"Key pair {key_name} created and saved as {key_name}.pem")
+
     except ClientError as e:
         print(f"Error creating key pair: {e}")
 
 # Step 4: Create the EC2 instance
-def create_instance(key_name, security_group_id):
+def create_instance(key_name, security_group_name, ami_id):
     try:
         instances = ec2.run_instances(
-            ImageId='ami-0a0e5d9c7acc336f1',  # You can change this to your preferred AMI
+            ImageId= ami_id,
             MinCount=1,
             MaxCount=1,
             InstanceType='t2.micro',
             KeyName=key_name,
-            SecurityGroupIds=[security_group_id],
+            SecurityGroups=[security_group_name],
+            # SecurityGroupIds=[security_group_id],
         )
         instance_id = instances['Instances'][0]['InstanceId']
         print(f"EC2 instance created with Instance ID: {instance_id}")
@@ -95,26 +98,25 @@ def get_public_ip(instance_id):
 
 # Main function to run the script
 def main():
-    group_name = "my-security-group"
-    key_name = "my-key-pair"
+    sg_name = "22756463-sg3"
+    sg_description = "security group for development environment"
+    key_name = "22756463-key3"
     tag_key = "Name"
-    tag_value = "My EC2 Instance"
+    tag_value = "22756463-3"
+    ami_id = "ami-0a0e5d9c7acc336f1"
     
-    # Replace with your VPC ID (You can get it from AWS console under VPC section)
-    vpc_id = "vpc-xxxxxxxx"
-
     # 1. Create a security group
-    security_group_id = create_security_group(group_name, "Security group for SSH access", vpc_id)
+    security_group_id = create_security_group(sg_name, sg_description)
 
     if security_group_id:
         # 2. Authorize inbound traffic for SSH
-        authorize_security_group_ingress(security_group_id)
+        authorize_security_group_ingress(sg_name)
 
         # 3. Create a key pair
         create_key_pair(key_name)
 
         # 4. Create the EC2 instance
-        instance_id = create_instance(key_name, security_group_id)
+        instance_id = create_instance(key_name, sg_name, ami_id)
 
         if instance_id:
             # 5. Add a tag to the instance
