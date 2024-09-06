@@ -310,9 +310,19 @@ I started the Docker service on a Linux system that uses systemd as its init sys
 The Docker service was started.
 
 ### [3] Enable Docker
+I configured my system so that the Docker service automatically starts every time the system boots by using command `sudo systemctl enable docker`.
 
+#### Commands
+- `sudo`: Run the command with elevated (root) privileges.
+- `systemctl`: The command-line utility used to interact with `systemd`, the service manager on many Linux distributions.`systemctl` is used to manage services, including enabling, disabling, starting, and stopping services.
+- `enable`: This subcommand tells systemctl to enable the specified service. In this case, enable Docker.
+
+#### Results
+TODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODO
 
 ### [4] Check the version
+
+
 
 ### [5] Build and run an httpd container
 
