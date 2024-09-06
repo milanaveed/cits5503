@@ -277,17 +277,40 @@ Welcome to Ubuntu 22.04.4 LTS (GNU/Linux 6.5.0-1022-aws x86_64)
 ```
 
 ### [8] List the created instance using the AWS console
+I logged into AWS Console and navigated to the EC2 Dashboard to view the information about the instance I created.
 
+#### Results
+![alt text](image-11.png)
 
 ## Create an EC2 instance with Python Boto3
+TODO:TODO:TODO:TODO:TODO:TODO:TODO:TODO:TODO:TODO:TODO:TODO:TODO:TODO:
 
 ## Use Docker inside a Linux OS
 
 ### [1] Install Docker
+I installed the Docker Engine (docker.io) on the Ubuntu system by using command `sudo apt install docker.io -y`.
+
+#### Commands
+- `sudo`: Run the command with elevated (root) privileges.
+- `apt install docker.io`: Use the "apt" package manager to install a package names "docker.io".
+- `-y`: This option automatically answers "yes" to any prompts that might come up during the installation process.
+
+#### Results
+The Docker package was installed.
 
 ### [2] Start Docker
+I started the Docker service on a Linux system that uses systemd as its init system by the command `sudo systemctl start docker`.
+
+#### Commands
+- `sudo`: Run the command with elevated (root) privileges.
+- `systemctl`: Used to control system services, including starting, stopping, restarting, enabling, and disabling services.
+- `start`: This is the subcommand that tells systemctl to start the specified service. In this case, we are starting the Docker service.
+
+#### Results
+The Docker service was started.
 
 ### [3] Enable Docker
+
 
 ### [4] Check the version
 
