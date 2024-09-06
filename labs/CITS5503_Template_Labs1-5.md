@@ -238,6 +238,7 @@ I added a tag to my EC2 instance created in step 4 by using the command `aws ec2
 Applied a tag to my EC2 instance with the ID "i-04c3576556495a2d1". The tag has a key of "Name" and a value of "22756463".
 
 ### [6] Get the public IP address
+I retrieved the public IP address of the EC2 instance I created in step 4 by using command `aws ec2 describe-instances --instance-ids i-04c3576556495a2d1 --query 'Reservations[0].Instances[0].PublicIpAddress'`.
 
 #### Commands
 - `aws ec2 describe-instances`: The command is used to retrieve details about specific EC2 instances.
@@ -251,8 +252,29 @@ Public IP address of the specified EC2 instance was returned:
 ```
 
 ### [7] Connect to the instance via ssh
+I connected to an Ubuntu EC2 instance located at public address "54.175.111.6" using SSH by the command `ssh -i 22756463-key.pem ubuntu@54.175.111.6`.
 
+#### Commands
+- `ssh`: This is the command for Secure Shell (SSH), a protocol used to securely connect to remote servers. SSH enables encrypted communication between the client (my machine) and the server (in this case, an EC2 instance).
+- `-i 22756463-key.pem`: `-i` specifies the identity file. In this case is the private key that I use to authenticate with the remote server.
+- `ubuntu`: This is the AMI (Amazon Machine Image) *username* that I am using to log into the remote server.
+- `@54.175.111.6`: `@` separates the username (ubuntu) from the server's IP address or hostname. `54.175.111.6` is the public IP address of the EC2 instance I am connecting to.
 
+#### Results
+```
+Welcome to Ubuntu 22.04.4 LTS (GNU/Linux 6.5.0-1022-aws x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Fri Sep  6 13:40:19 UTC 2024
+
+  System load:  0.08              Processes:             97
+  Usage of /:   20.7% of 7.57GB   Users logged in:       0
+  Memory usage: 21%               IPv4 address for eth0: 172.31.95.57
+  Swap usage:   0%
+```
 
 ### [8] List the created instance using the AWS console
 
