@@ -460,13 +460,57 @@ I configured my system so that the Docker service automatically starts every tim
 - `enable`: This subcommand tells systemctl to enable the specified service. In this case, enable Docker.
 
 #### Results
-TODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODO
+Enabled the Docker service to start at boot.
 
 ### [4] Check the version
+I checked the Docker package version by command `docker --version`. 
 
-
+#### Results
+The Docker version information is returned:
+```
+Docker version 24.0.7, build 24.0.7-0ubuntu2~22.04.1
+```
 
 ### [5] Build and run an httpd container
+#### 1. Prepare HTML file and the Dockerfile
+I created a directory called html by using command `mkdir html`. Then I navigated to the "html" directory by using command `cd html`. I then used command `nano index.html` and copied the html content into the the file. After saving the file, I changed back to the parent directory by using command `cd ..`. Then I created a file called Dockerfile by using command `nano Dockerfile`.
+
+#### 2. Build a docker image
+I built a Docker image from a Dockerfile in the current directory and tagged it with a name by using command `sudo docker build -t my-apache2 .`. 
+
+##### Commands
+- - `sudo`: Run the command with elevated (root) privileges.
+- `docker build`: This command tells Docker to build an image. It reads the instructions in the Dockerfile to build the image.
+- `-t my-apache2`: The `-t` option stands for "tag". It allows me to name the image with a custom tag. `my-apache2` is the name (or tag) we are assigning to the image. This makes it easier to reference the image later when running or managing containers.
+- `.`: Refers to the current directory.
+##### Results
+```bash
+Sending build context to Docker daemon  77.13MB
+Step 1/2 : FROM httpd:2.4
+2.4: Pulling from library/httpd
+a2318d6c47ec: Pull complete
+62dd86107c65: Pull complete
+4f4fb700ef54: Pull complete
+22871f73faed: Pull complete
+ca061a523d1f: Pull complete
+509789394c2a: Pull complete
+Digest: sha256:ae1124b8d23ee3fc35d49da35d5c748a2fce318d1f55ce59ccab889d612f8be8
+Status: Downloaded newer image for httpd:2.4
+ ---> 9cb0a2315602
+Step 2/2 : COPY ./html/ /usr/local/apache2/htdocs/
+ ---> 6f9ac4719994
+Successfully built 6f9ac4719994
+Successfully tagged my-apache2:latest
+```
+
+#### 3. Run the image
+
+
+##### Results
+```
+4bd9b9e14d0e26f1b725190c3a2589130fe43359f9b47b7b061c72ef678c5f62
+```
+![alt text](image-13.png)
 
 ### [6] Other docker commands
 
