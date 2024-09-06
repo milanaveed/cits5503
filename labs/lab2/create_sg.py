@@ -5,8 +5,7 @@ client = boto3.client('ec2')
 
 response = client.create_security_group(
     Description='security group for development environment',
-    GroupName='22756463-sg',
-    # VpcId='string',
+    GroupName='22756463-sg2',
     TagSpecifications=[
         {
             'ResourceType': 'security-group',
@@ -18,7 +17,6 @@ response = client.create_security_group(
             ]
         },
     ],
-    DryRun=True
 )
 
 print(response)
