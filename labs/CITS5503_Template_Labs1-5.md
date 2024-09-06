@@ -221,7 +221,7 @@ I created an instance located in the region "US East (N. Virginia)" according to
 - `--query 'Instances[0].InstanceId'`: `--query` is used to filter the output of the command. This queries the result to return only the Instance ID of the first launched instance.
 
 #### Results
-The Instance ID of the newly launched instance is returned:
+The Instance ID of the newly launched instance was returned:
 ```
 "i-04c3576556495a2d1"
 ```
@@ -239,7 +239,20 @@ Applied a tag to my EC2 instance with the ID "i-04c3576556495a2d1". The tag has 
 
 ### [6] Get the public IP address
 
+#### Commands
+- `aws ec2 describe-instances`: The command is used to retrieve details about specific EC2 instances.
+- `--instance-ids`: This flag specifies the ID(s) of the EC2 instances I want to describe.
+- `--query 'Reservations[0].Instances[0].PublicIpAddress'`: `--query` filters the output to retrieve only the information I need. This query navigates the JSON structure returned by the `describe-instances` command to extract the public IP address of the first instance in the first reservation.
+
+#### Results
+Public IP address of the specified EC2 instance was returned:
+```
+"54.175.111.6"
+```
+
 ### [7] Connect to the instance via ssh
+
+
 
 ### [8] List the created instance using the AWS console
 
