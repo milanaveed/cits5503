@@ -144,7 +144,6 @@ print(tabulate(content, col_names, tablefmt="pretty"))
 
 ## Create an EC2 instance using awscli
 
-
 ### [1] Create a security group
 I created a new security group in Amazon EC2 through the command `aws ec2 create-security-group --group-name 22756463-sg --description "security group for development environment"`. This security group will act as virtual firewalls to control inbound and outbound traffic (traffic coming into the instances and traffic going out from the instances) to the EC2 instances.
 
@@ -157,18 +156,56 @@ I created a new security group in Amazon EC2 through the command `aws ec2 create
   
 #### Results
 Created a security group named "22756463-sg".
+```
+{
+    "GroupId": "sg-0ae5c80f51af3b210"
+}
+```
 
 ### [2] Authorise inbound traffic for ssh
-
+I authorised inbound traffic by using command `aws ec2 authorize-security-group-ingress --group-name 22756463-sg --protocol tcp --port 22 --cidr 0.0.0.0/0`. This command allowed inbound SSH (port 22) traffic to reach my EC2 instance from any IP address (by specifying "0.0.0.0/0"), as long as the instance is associated with the security group "22756463-sg". This rule is applied using the TCP protocol.
 
 #### Commands
-- `aws ec2 authorize-security-group-ingress`: this is used to add a rule to an existing security group to allow inbound traffic.
+- `aws ec2 authorize-security-group-ingress`: This is used to add a rule to an existing security group to allow inbound traffic to the security group.
+- `--group-name 22756463-sg`: Specifies the name of the security group we are modifying.
+- `--protocol tcp`: Defines the protocol that is allowed. In this case, tcp is the Transmission Control Protocol, which is the protocol used for reliable communication over the internet (commonly used for SSH, HTTP, HTTPS, etc.).
+- `--port 22`: `--port` Specifies the port number to allow inbound traffic on.
+In this case, port 22 is used for SSH (Secure Shell), which is commonly used for remote access to Linux servers.
+- `--cidr 0.0.0.0/0`: The CIDR (Classless Inter-Domain Routing) block represents the range of IP addresses that are allowed to connect. "0.0.0.0/0" represents all IP addresses, meaning this rule will allow SSH traffic from anywhere in the world. (This is generally not secure and should be restricted to a specific IP range or address whenever possible.)
+- SSH (Secure Shell): A *network protocol* used to securely *access and manage remote servers* over an unsecured network. It allows us to establish a secure, encrypted connection between our local machine and a remote server, enabling us to execute commands, transfer files, and perform administrative tasks on that server.
 
+#### Results
+```
+{
+    "Return": true,
+    "SecurityGroupRules": [
+        {
+            "SecurityGroupRuleId": "sgr-093d071b1a0fd2236",
+            "GroupId": "sg-0ae5c80f51af3b210",
+            "GroupOwnerId": "489389878001",
+            "IsEgress": false,
+            "IpProtocol": "tcp",
+            "FromPort": 22,
+            "ToPort": 22,
+            "CidrIpv4": "0.0.0.0/0"
+        }
+    ]
+}
+```
+
+### [3] Create a key pair
+I generated a new key pair, extracted the private key and saved it to a file in the file format ".pem" which is mainly used for SSH access to EC2 instances. This private key file will be required when I SSH into my EC2 instance.
+
+#### Commands
+- `aws ec2 create-key-pair`: Used to create an SSH key pair for securely connecting to an Amazon EC2 instance. A key pair consists of a public key (stored by AWS) and a private key (saved by me), which are used to securely connect to an EC2 instance via SSH.
+- `--key-name`: Specifies the name of the key pair. The key name must be unique within my AWS account for that region.
+- `--query 'KeyMaterial'`: The `--query` option filters the output of the command. 'KeyMaterial' is the part of the *returned data* that contains the actual *private key* in plain text format, which I need to connect to EC2 instances via SSH. This ensures that only the private key (KeyMaterial) is retrieved from the full response that AWS returns.
+- `--output text`: This option specifies that the output should be in plain text format, rather than JSON or any other format. This ensures that the private key is displayed in a simple, readable text format, which can then be saved to a file.
+- `> 22756463-key.pem`: The `>` operator redirects the output of the command to a file named `22756463-key.pem`. This file will contain the private key (in .pem format), which I will later use to connect to my EC2 instance via SSH.
+- ".pem" file: A ".pem" file (Privacy Enhanced Mail) is a file format that typically contains a private key and/or a public key. It is used in various security and encryption contexts, most commonly for establishing secure communication over the internet (such as SSH and HTTPS). In AWS, .pem files are primarily used for SSH access to EC2 instances.
 
 #### Results
 
-
-### [3] Create a key pair
 
 ### [4] Create the instance
 
