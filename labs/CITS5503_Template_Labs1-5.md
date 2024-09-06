@@ -138,10 +138,400 @@ print(tabulate(content, col_names, tablefmt="pretty"))
 ![alt text](image-8.png)
 
 
-
 <div style="page-break-after: always;"></div>
 
 # Lab 2
+
+## Create an EC2 instance using awscli
+
+### [1] Create a security group
+I created a new security group in Amazon EC2 through the command `aws ec2 create-security-group --group-name 22756463-sg --description "security group for development environment"`. This security group will act as virtual firewalls to control inbound and outbound traffic (traffic coming into the instances and traffic going out from the instances) to the EC2 instances.
+
+#### Commands
+- `aws ec2`: refers to the AWS EC2 service. By specifying this, we are using the AWS EC2 service through the command line.
+- `create-security-group`: the action we are doing given this command line. It creates a new security group in the default VPC (Virtual Private Cloud) given VPC is not specified in this case.
+- `--group-name`: this flag is used to specify the name of the security group. 
+- `-sg`: "sg" stands for security group. This suffix is a common convention to specify that this is a security group.
+- `--description`: this flag is used to set the description for the security group, so we can identify the purpose of this security group later.
+  
+#### Results
+Created a security group named "22756463-sg".
+```
+{
+    "GroupId": "sg-0ae5c80f51af3b210"
+}
+```
+
+### [2] Authorise inbound traffic for ssh
+I authorised inbound traffic by using command `aws ec2 authorize-security-group-ingress --group-name 22756463-sg --protocol tcp --port 22 --cidr 0.0.0.0/0`. This command allowed inbound SSH (port 22) traffic to reach my EC2 instance from any IP address (by specifying "0.0.0.0/0"), as long as the instance is associated with the security group "22756463-sg". This rule is applied using the TCP protocol.
+
+#### Commands
+- `aws ec2 authorize-security-group-ingress`: This is used to add a rule to an existing security group to allow inbound traffic to the security group.
+- `--group-name 22756463-sg`: Specifies the name of the security group we are modifying.
+- `--protocol tcp`: Defines the protocol that is allowed. In this case, tcp is the Transmission Control Protocol, which is the protocol used for reliable communication over the internet (commonly used for SSH, HTTP, HTTPS, etc.).
+- `--port 22`: `--port` Specifies the port number to allow inbound traffic on.
+In this case, port 22 is used for SSH (Secure Shell), which is commonly used for remote access to Linux servers.
+- `--cidr 0.0.0.0/0`: The CIDR (Classless Inter-Domain Routing) block represents the range of IP addresses that are allowed to connect. "0.0.0.0/0" represents all IP addresses, meaning this rule will allow SSH traffic from anywhere in the world. (This is generally not secure and should be restricted to a specific IP range or address whenever possible.)
+- SSH (Secure Shell): A *network protocol* used to securely *access and manage remote servers* over an unsecured network. It allows us to establish a secure, encrypted connection between our local machine and a remote server, enabling us to execute commands, transfer files, and perform administrative tasks on that server.
+
+#### Results
+```
+{
+    "Return": true,
+    "SecurityGroupRules": [
+        {
+            "SecurityGroupRuleId": "sgr-093d071b1a0fd2236",
+            "GroupId": "sg-0ae5c80f51af3b210",
+            "GroupOwnerId": "489389878001",
+            "IsEgress": false,
+            "IpProtocol": "tcp",
+            "FromPort": 22,
+            "ToPort": 22,
+            "CidrIpv4": "0.0.0.0/0"
+        }
+    ]
+}
+```
+
+### [3] Create a key pair
+I generated a new key pair, extracted the private key and saved it to a file in the file format ".pem" which is mainly used for SSH access to EC2 instances. This private key file will be required when I SSH into my EC2 instance.
+
+#### Commands
+- `aws ec2 create-key-pair`: Used to create an SSH key pair for securely connecting to an Amazon EC2 instance. A key pair consists of a public key (stored by AWS) and a private key (saved by me), which are used to securely connect to an EC2 instance via SSH.
+- `--key-name`: Specifies the name of the key pair. The key name must be unique within my AWS account for that region.
+- `--query 'KeyMaterial'`: The `--query` option filters the output of the command. 'KeyMaterial' is the part of the *returned data* that contains the actual *private key* in plain text format, which I need to connect to EC2 instances via SSH. This ensures that only the private key (KeyMaterial) is retrieved from the full response that AWS returns.
+- `--output text`: This option specifies that the output should be in plain text format, rather than JSON or any other format. This ensures that the private key is displayed in a simple, readable text format, which can then be saved to a file.
+- `> 22756463-key.pem`: The `>` operator redirects the output of the command to a file named `22756463-key.pem`. This file will contain the private key (in .pem format), which I will later use to connect to my EC2 instance via SSH.
+- ".pem" file: A ".pem" file (Privacy Enhanced Mail) is a file format that typically contains a private key and/or a public key. It is used in various security and encryption contexts, most commonly for establishing secure communication over the internet (such as SSH and HTTPS). In AWS, .pem files are primarily used for SSH access to EC2 instances.
+- `chmod 400 22756463-key.pem`: This command sets the file permissions such that only the file owner can read the 22756463-key.pem file, and no one else (group or others) can read, write, or execute the file. `chmod` is the change mode command in Unix/Linux systems. It is used to change the permissions of a file or directory. Permissions control who can read, write, or execute a file. `400` is the permission code that specifies what permissions are being applied to the file. The first digit represents the owner permission, the second digit represents the group permission, and the last digit represent the permission of others. "4" represents read permission while "0" means no permission. `22756463-key.pem` specifies the name of the file for which the permissions are being changed.
+
+#### Results
+Generated a new key pair, extracted the private key and saved it into "22756463-key.pem". Then changed the file permission to be read only by the owner.
+
+### [4] Create the instance
+I created an instance located in the region "US East (N. Virginia)" according to my student number and the allocation table. I used the command ``aws ec2 run-instances --image-id ami-0a0e5d9c7acc336f1 --security-group-ids 22756463-sg --count 1 --instance-type t2.micro --key-name 22756463-key --query 'Instances[0].InstanceId'.
+
+#### Commands
+- `aws ec2 run-instances`: This command is used to launch (run) one or more EC2 instances in the AWS cloud.
+- `--image-id`: Specifies the Amazon Machine Image (AMI) that will be used to launch the instance.
+- `--security-group-ids`: This specifies the security group(s) that will be associated with the instance. The security group acts as a *virtual firewall* that controls inbound and outbound traffic.
+- `--count`: Specifies the number of EC2 instances to launch.
+- `--instance-type`: Specifies the type of EC2 instance to launch. `t2.micro` is a small, general-purpose instance type with 1 vCPU and 1 GB of RAM. It is suitable for low-traffic applications or testing and is often eligible for the AWS Free Tier.
+- `--key-name`: Specifies the name of the SSH key pair that will be used to access the instance.
+- `--query 'Instances[0].InstanceId'`: `--query` is used to filter the output of the command. This queries the result to return only the Instance ID of the first launched instance.
+
+#### Results
+The Instance ID of the newly launched instance was returned:
+```
+"i-04c3576556495a2d1"
+```
+
+### [5] Add a tag to your Instance
+I added a tag to my EC2 instance created in step 4 by using the command `aws ec2 create-tags --resources i-04c3576556495a2d1 --tags Key=Name,Value=22756463`. The tag is useful for identifying and organising the instance.
+
+#### Commands
+- `aws ec2 create-tags`: This command is used to assign metadata, called tags, to an AWS resource such as an EC2 instance, volume, or other AWS resources. Tags are *key-value pairs* that allow me to organise, identify, and manage my resources more easily.
+- `--resources`: Specifies which AWS resources (like EC2 instances, volumes, etc.) I want to tag.
+- `--tags Key=Name,Value=22756463`: `--tags` defines the tag(s) I want to apply to the resource. `Key=Name` specifies the key for the tag. In AWS, "Name" is commonly used as a tag key to give the resource a human-readable name. `Value=22756463` specifies the value for the "Name" tag.
+
+#### Results
+Applied a tag to my EC2 instance with the ID "i-04c3576556495a2d1". The tag has a key of "Name" and a value of "22756463".
+
+### [6] Get the public IP address
+I retrieved the public IP address of the EC2 instance I created in step 4 by using command `aws ec2 describe-instances --instance-ids i-04c3576556495a2d1 --query 'Reservations[0].Instances[0].PublicIpAddress'`.
+
+#### Commands
+- `aws ec2 describe-instances`: The command is used to retrieve details about specific EC2 instances.
+- `--instance-ids`: This flag specifies the ID(s) of the EC2 instances I want to describe.
+- `--query 'Reservations[0].Instances[0].PublicIpAddress'`: `--query` filters the output to retrieve only the information I need. This query navigates the JSON structure returned by the `describe-instances` command to extract the public IP address of the first instance in the first reservation.
+
+#### Results
+Public IP address of the specified EC2 instance was returned:
+```
+"54.175.111.6"
+```
+
+### [7] Connect to the instance via ssh
+I connected to an Ubuntu EC2 instance located at public address "54.175.111.6" using SSH by the command `ssh -i 22756463-key.pem ubuntu@54.175.111.6`.
+
+#### Commands
+- `ssh`: This is the command for Secure Shell (SSH), a protocol used to securely connect to remote servers. SSH enables encrypted communication between the client (my machine) and the server (in this case, an EC2 instance).
+- `-i 22756463-key.pem`: `-i` specifies the identity file. In this case is the private key that I use to authenticate with the remote server.
+- `ubuntu`: This is the AMI (Amazon Machine Image) *username* that I am using to log into the remote server.
+- `@54.175.111.6`: `@` separates the username (ubuntu) from the server's IP address or hostname. `54.175.111.6` is the public IP address of the EC2 instance I am connecting to.
+
+#### Results
+```
+Welcome to Ubuntu 22.04.4 LTS (GNU/Linux 6.5.0-1022-aws x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Fri Sep  6 13:40:19 UTC 2024
+
+  System load:  0.08              Processes:             97
+  Usage of /:   20.7% of 7.57GB   Users logged in:       0
+  Memory usage: 21%               IPv4 address for eth0: 172.31.95.57
+  Swap usage:   0%
+```
+
+### [8] List the created instance using the AWS console
+I logged into AWS Console and navigated to the EC2 Dashboard to view the information about the instance I created.
+
+#### Results
+![alt text](image-11.png)
+
+## Create an EC2 instance with Python Boto3
+I wrote the following Python script into a file in my current directory in the Ubuntu system. And then run the Python script to create an EC2 instance.
+
+### Python Script
+```python
+import boto3
+from botocore.exceptions import ClientError
+
+# Initialize EC2 client
+ec2 = boto3.client('ec2')
+
+# Step 1: Create a security group
+def create_security_group(group_name, description):
+    try:
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/client/create_security_group.html
+        response = ec2.create_security_group(
+            GroupName=group_name,
+            Description=description,
+        )
+        security_group_id = response['GroupId']
+        print(f'Security Group {group_name} created with ID: {security_group_id}')
+        return security_group_id
+    except ClientError as e:
+        print(f"Error creating security group: {e}")
+        return None
+
+# Step 2: Authorise inbound traffic for SSH
+def authorize_security_group_ingress(group_name):
+    try:
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/client/authorize_security_group_ingress.html
+        ec2.authorize_security_group_ingress(
+            GroupName= group_name,
+            # CidrIp='0.0.0.0/0',
+            # GroupId=group_id,
+            IpPermissions=[
+                {
+                    'IpProtocol': 'tcp',
+                    'FromPort': 22,
+                    'ToPort': 22,
+                    'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
+                }
+            ]
+        )
+        print(f"SSH rule added to Security Group: {group_name}")
+    except ClientError as e:
+        print(f"Error adding SSH rule to security group: {e}")
+
+# Step 3: Create a key pair
+def create_key_pair(key_name):
+    try:
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/client/create_key_pair.html
+        key_pair = ec2.create_key_pair(KeyName=key_name)
+        private_key = key_pair['KeyMaterial']
+        
+        # Save the private key to a .pem file
+        with open(f"{key_name}.pem", "w") as key_file:
+            key_file.write(private_key)
+        
+        print(f"Key pair {key_name} created and saved as {key_name}.pem")
+
+    except ClientError as e:
+        print(f"Error creating key pair: {e}")
+
+# Step 4: Create the EC2 instance
+def create_instance(key_name, security_group_name, ami_id):
+    try:
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/client/run_instances.html
+        instances = ec2.run_instances(
+            ImageId= ami_id,
+            MinCount=1,
+            MaxCount=1,
+            InstanceType='t2.micro',
+            KeyName=key_name,
+            SecurityGroups=[security_group_name],
+            # SecurityGroupIds=[security_group_id],
+        )
+        instance_id = instances['Instances'][0]['InstanceId']
+        print(f"EC2 instance created with Instance ID: {instance_id}")
+        return instance_id
+    except ClientError as e:
+        print(f"Error creating EC2 instance: {e}")
+        return None
+
+# Step 5: Add a tag to the instance
+def add_tag(instance_id, tag_key, tag_value):
+    try:
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/client/create_tags.html
+        ec2.create_tags(
+            Resources=[instance_id],
+            Tags=[
+                {'Key': tag_key, 'Value': tag_value}
+            ]
+        )
+        print(f"Tag '{tag_key}: {tag_value}' added to instance {instance_id}")
+    except ClientError as e:
+        print(f"Error tagging instance: {e}")
+
+# Step 6: Get the public IP address of the instance
+def get_public_ip(instance_id):
+    try:
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/client/describe_instances.html
+        reservations = ec2.describe_instances(InstanceIds=[instance_id])
+        public_ip = reservations['Reservations'][0]['Instances'][0]['PublicIpAddress']
+        print(f"Public IP address of the instance: {public_ip}")
+        return public_ip
+    except ClientError as e:
+        print(f"Error retrieving public IP: {e}")
+        return None
+
+# Main function to run the script
+def main():
+    sg_name = "22756463-sg3"
+    sg_description = "security group for development environment"
+    key_name = "22756463-key3"
+    tag_key = "Name"
+    tag_value = "22756463-3"
+    ami_id = "ami-0a0e5d9c7acc336f1"
+    
+    # 1. Create a security group
+    security_group_id = create_security_group(sg_name, sg_description)
+
+    if security_group_id:
+        # 2. Authorize inbound traffic for SSH
+        authorize_security_group_ingress(sg_name)
+
+        # 3. Create a key pair
+        create_key_pair(key_name)
+
+        # 4. Create the EC2 instance
+        instance_id = create_instance(key_name, sg_name, ami_id)
+
+        if instance_id:
+            # 5. Add a tag to the instance
+            add_tag(instance_id, tag_key, tag_value)
+
+            # 6. Get the public IP address
+            get_public_ip(instance_id)
+
+if __name__ == "__main__":
+    main()
+```
+
+### Results
+![alt text](image-12.png)
+
+## Use Docker inside a Linux OS
+
+### [1] Install Docker
+I installed the Docker Engine (docker.io) on the Ubuntu system by using command `sudo apt install docker.io -y`.
+
+#### Commands
+- `sudo`: Run the command with elevated (root) privileges.
+- `apt install docker.io`: Use the "apt" package manager to install a package names "docker.io".
+- `-y`: This option automatically answers "yes" to any prompts that might come up during the installation process.
+
+#### Results
+The Docker package was installed.
+
+### [2] Start Docker
+I started the Docker service on a Linux system that uses systemd as its init system by the command `sudo systemctl start docker`.
+
+#### Commands
+- `sudo`: Run the command with elevated (root) privileges.
+- `systemctl`: Used to control system services, including starting, stopping, restarting, enabling, and disabling services.
+- `start`: This is the subcommand that tells systemctl to start the specified service. In this case, we are starting the Docker service.
+
+#### Results
+The Docker service was started.
+
+### [3] Enable Docker
+I configured my system so that the Docker service automatically starts every time the system boots by using command `sudo systemctl enable docker`.
+
+#### Commands
+- `sudo`: Run the command with elevated (root) privileges.
+- `systemctl`: The command-line utility used to interact with `systemd`, the service manager on many Linux distributions.`systemctl` is used to manage services, including enabling, disabling, starting, and stopping services.
+- `enable`: This subcommand tells systemctl to enable the specified service. In this case, enable Docker.
+
+#### Results
+Enabled the Docker service to start at boot.
+
+### [4] Check the version
+I checked the Docker package version by command `docker --version`. 
+
+#### Results
+The Docker version information is returned:
+```
+Docker version 24.0.7, build 24.0.7-0ubuntu2~22.04.1
+```
+
+### [5] Build and run an httpd container
+#### 1. Prepare HTML file and the Dockerfile
+I created a directory called html by using command `mkdir html`. Then I navigated to the "html" directory by using command `cd html`. I then used command `nano index.html` and copied the html content into the the file. After saving the file, I changed back to the parent directory by using command `cd ..`. Then I created a file called Dockerfile by using command `nano Dockerfile`.
+
+#### 2. Build a docker image
+I built a Docker image from a Dockerfile in the current directory and tagged it with a name by using command `sudo docker build -t my-apache2 .`. 
+
+##### Commands
+- - `sudo`: Run the command with elevated (root) privileges.
+- `docker build`: This command tells Docker to build an image. It reads the instructions in the Dockerfile to build the image.
+- `-t my-apache2`: The `-t` option stands for "tag". It allows me to name the image with a custom tag. `my-apache2` is the name (or tag) we are assigning to the image. This makes it easier to reference the image later when running or managing containers.
+- `.`: Refers to the current directory.
+##### Results
+```bash
+Sending build context to Docker daemon  77.13MB
+Step 1/2 : FROM httpd:2.4
+2.4: Pulling from library/httpd
+a2318d6c47ec: Pull complete
+62dd86107c65: Pull complete
+4f4fb700ef54: Pull complete
+22871f73faed: Pull complete
+ca061a523d1f: Pull complete
+509789394c2a: Pull complete
+Digest: sha256:ae1124b8d23ee3fc35d49da35d5c748a2fce318d1f55ce59ccab889d612f8be8
+Status: Downloaded newer image for httpd:2.4
+ ---> 9cb0a2315602
+Step 2/2 : COPY ./html/ /usr/local/apache2/htdocs/
+ ---> 6f9ac4719994
+Successfully built 6f9ac4719994
+Successfully tagged my-apache2:latest
+```
+
+#### 3. Run the image
+I run the Docker image by using command `sudo docker run -p 80:80 -dit --name my-app my-apache2`. And then open it in the browser through address "http://127.0.0.1".
+
+##### Commands
+- docker run: The command is used to run a container from a Docker image.
+It creates a new container, starts it, and runs the application or service defined in the image.
+- `-p 80:80`: The -p option maps a port from the host to the container. In this case, it maps port 80 of the host to port 80of the container. This allows the container to serve web traffic via the host's port 80.
+- `-dit`: This is a combination of three flags:
+    - `-d`: Runs the container in detached mode, meaning it runs in the background and doesn’t block your terminal. The container continues running until you stop it.
+    - `-i`: Runs the container in interactive mode, allowing you to interact with the container. This is useful if you want to keep STDIN open for input (though combined with -d, it will allow the container to keep running).
+    - `-t`: Allocates a pseudo-TTY (a terminal interface), which allows you to interact with the container through a terminal if needed. This is useful for containers that require terminal interaction.
+
+##### Results
+```
+4bd9b9e14d0e26f1b725190c3a2589130fe43359f9b47b7b061c72ef678c5f62
+```
+![alt text](image-13.png)
+
+### [6] Other docker commands
+#### Check what is running
+##### Commands 
+- `ps`: This is the "process status" command in Docker. It shows information about Docker containers. Without any options, docker `ps` will only show running containers.
+- `-a`: The -a (or --all) option modifies the docker ps command to show all containers.
+
+##### Results
+![alt text](image-14.png)
+
+#### Stop and remove the container
+I stopped and removed the container by using commands `sudo docker stop my-app` and `sudo docker rm my-app`.
 
 <div style="page-break-after: always;"></div>
 
