@@ -504,7 +504,16 @@ Successfully tagged my-apache2:latest
 ```
 
 #### 3. Run the image
+I run the Docker image by using command `sudo docker run -p 80:80 -dit --name my-app my-apache2`. And then open it in the browser through address "http://127.0.0.1".
 
+##### Commands
+- docker run: The command is used to run a container from a Docker image.
+It creates a new container, starts it, and runs the application or service defined in the image.
+- `-p 80:80`: The -p option maps a port from the host to the container. In this case, it maps port 80 of the host to port 80of the container. This allows the container to serve web traffic via the host's port 80.
+- `-dit`: This is a combination of three flags:
+    - `-d`: Runs the container in detached mode, meaning it runs in the background and doesn’t block your terminal. The container continues running until you stop it.
+    - `-i`: Runs the container in interactive mode, allowing you to interact with the container. This is useful if you want to keep STDIN open for input (though combined with -d, it will allow the container to keep running).
+    - `-t`: Allocates a pseudo-TTY (a terminal interface), which allows you to interact with the container through a terminal if needed. This is useful for containers that require terminal interaction.
 
 ##### Results
 ```
@@ -513,7 +522,16 @@ Successfully tagged my-apache2:latest
 ![alt text](image-13.png)
 
 ### [6] Other docker commands
+#### Check what is running
+##### Commands 
+- `ps`: This is the "process status" command in Docker. It shows information about Docker containers. Without any options, docker `ps` will only show running containers.
+- `-a`: The -a (or --all) option modifies the docker ps command to show all containers.
 
+##### Results
+![alt text](image-14.png)
+
+#### Stop and remove the container
+I stopped and removed the container by using commands `sudo docker stop my-app` and `sudo docker rm my-app`.
 
 <div style="page-break-after: always;"></div>
 
