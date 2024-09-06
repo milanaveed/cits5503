@@ -296,6 +296,7 @@ ec2 = boto3.client('ec2')
 # Step 1: Create a security group
 def create_security_group(group_name, description):
     try:
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/client/create_security_group.html
         response = ec2.create_security_group(
             GroupName=group_name,
             Description=description,
@@ -310,8 +311,11 @@ def create_security_group(group_name, description):
 # Step 2: Authorise inbound traffic for SSH
 def authorize_security_group_ingress(group_name):
     try:
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/client/authorize_security_group_ingress.html
         ec2.authorize_security_group_ingress(
             GroupName= group_name,
+            # CidrIp='0.0.0.0/0',
+            # GroupId=group_id,
             IpPermissions=[
                 {
                     'IpProtocol': 'tcp',
@@ -328,6 +332,7 @@ def authorize_security_group_ingress(group_name):
 # Step 3: Create a key pair
 def create_key_pair(key_name):
     try:
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/client/create_key_pair.html
         key_pair = ec2.create_key_pair(KeyName=key_name)
         private_key = key_pair['KeyMaterial']
         
@@ -343,6 +348,7 @@ def create_key_pair(key_name):
 # Step 4: Create the EC2 instance
 def create_instance(key_name, security_group_name, ami_id):
     try:
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/client/run_instances.html
         instances = ec2.run_instances(
             ImageId= ami_id,
             MinCount=1,
@@ -362,6 +368,7 @@ def create_instance(key_name, security_group_name, ami_id):
 # Step 5: Add a tag to the instance
 def add_tag(instance_id, tag_key, tag_value):
     try:
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/client/create_tags.html
         ec2.create_tags(
             Resources=[instance_id],
             Tags=[
@@ -375,6 +382,7 @@ def add_tag(instance_id, tag_key, tag_value):
 # Step 6: Get the public IP address of the instance
 def get_public_ip(instance_id):
     try:
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/client/describe_instances.html
         reservations = ec2.describe_instances(InstanceIds=[instance_id])
         public_ip = reservations['Reservations'][0]['Instances'][0]['PublicIpAddress']
         print(f"Public IP address of the instance: {public_ip}")
