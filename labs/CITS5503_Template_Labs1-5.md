@@ -537,9 +537,473 @@ I stopped and removed the container by using commands `sudo docker stop my-app` 
 
 # Lab 3
 
+## [1] Preparation
+I prepared items for the program as follows:
+1. I downloaded the Python code `cloudstorage.py` from the directory of [src](https://github.com/zhangzhics/CITS5503_Sem2/blob/master/Labs/src/cloudstorage.py).
+2. I created a directory called `rootdir` by using command `mkdir rootdir`.
+3. Then I changed into the directory `rootdir` by using command `cd rootdir` and write content "1\n2\n3\n4\n5\n" in a file called `rootfile.txt` by using command `nano rootfile.txt`.
+4. I created a directory in "rootdir" called `subdir` by using command `mkdir subdir` and changed into `subdir` by using command `cd subdir`. Then I created a file named `subfile.txt`with the same content by using command `nano subfile.txt`. 
+
+## [2] Save to S3 by updating cloudstorage.py
+I uploaded those files prepared in Step 1 to the newly created S3 bucket by changing the provide Python code to the following.
+
+### Python script: `cloudstorage.py`
+```python
+import os
+import boto3
+import base64
+
+# ------------------------------
+# CITS5503
+#
+# cloudstorage.py
+#
+# skeleton application to copy local files to S3
+#
+# Given a root local directory, will return files in each level and
+# copy to same path on S3
+#
+# ------------------------------ 
+
+ROOT_DIR = '.'
+ROOT_S3_DIR = '22756463-cloudstorage'
+
+s3 = boto3.client("s3")
+
+bucket_region = 'us-east-1'
+
+bucket_config = {'LocationConstraint': bucket_region} 
+
+
+def upload_file(folder_name, file, file_name):
+    print("Uploading %s" % file)
+
+    try:
+        s3.upload_file(file, ROOT_S3_DIR, folder_name+file_name)
+    except Exception as error:
+        print(error)
+        pass
+
+try:
+    # Check if bucket exists
+    s3.head_bucket(Bucket=ROOT_S3_DIR)
+    print(f"Bucket {ROOT_S3_DIR} already exists.")
+except Exception as error:
+    # If bucket does not exist, create it
+    print(f"Creating bucket {ROOT_S3_DIR}...")
+    try:
+        if bucket_region == 'us-east-1':
+            # us-east-1 (N. Virginia) does not require LocationConstraint
+            s3.create_bucket(Bucket=ROOT_S3_DIR)
+        else:
+            response = s3.create_bucket(
+                Bucket=ROOT_S3_DIR,
+                CreateBucketConfiguration=bucket_config
+            )
+            print(f"Bucket {ROOT_S3_DIR} created successfully.")
+    except Exception as error:
+        print(f"Error creating bucket: {str(error)}")
+        raise
+
+
+# parse directory and upload files
+for dir_name, subdir_list, file_list in os.walk(ROOT_DIR, topdown=True):
+    if dir_name != ROOT_DIR:
+        for fname in file_list:
+            upload_file("%s/" % dir_name[2:], "%s/%s" % (dir_name, fname), fname)
+
+print("done")
+```
+
+### Results
+Files uploaded to the S3 bucket with the same file structure as shown in Step 1.
+
+![alt text](image-15.png)
+
+## [3] Restore from S3
+I downloaded the files and directories from the S3 bucket by running the following Python script.
+
+### Python script: `restorefromcloud.py`
+```python
+import os
+import boto3
+
+# Initialise the S3 client
+s3 = boto3.client('s3')
+
+# Define the S3 bucket name
+BUCKET_NAME = '22756463-cloudstorage'  
+LOCAL_ROOT_DIR = './restored_files'  
+
+
+for object in s3.list_objects(Bucket = BUCKET_NAME)['Contents']:
+    object_key = object['Key']
+    print("Downloading %s" % object_key)
+    cloud_dir_path = os.path.dirname(object_key)
+    local_dir_path = os.path.join(LOCAL_ROOT_DIR, cloud_dir_path)
+    if not os.path.exists(local_dir_path):
+        os.makedirs(local_dir_path)
+    local_file_path = os.path.join(LOCAL_ROOT_DIR, object_key)
+    s3.download_file(BUCKET_NAME, object_key, local_file_path)
+```
+
+### Results
+The files and directories from the S3 bucket were downloaded into the local Linux environment.
+
+
+## [4] Write information about files to DynamoDB
+
+### 1. Install DynamoDB and jre
+I created a direcotry named `dynamodb` and changed into that directory by using commands `mkdir dynamodb` and `cd dynamodb`. Then I installed jre (Java Runtime Environment) using command `sudo apt-get install default-jre` and downloaded DynamoDB compressed file using `wget https://s3-ap-northeast-1.amazonaws.com/dynamodb-local-tokyo/dynamodb_local_latest.tar.gz`. I extracted files from the downloaded DynamoDB compressed archive format by using command `tar -zxvf dynamodb_local_latest.tar.gz`.
+
+Note for myself: Amazon DynamoDB is a fully managed, scalable NoSQL database service offering fast, low-latency data access for high-performance applications.
+
+#### Commands
+- `mkdir`: create a directory.
+- `cd`: change into another directory.
+- `sudo`: Runs the command with superuser (root) privileges.
+- `apt-get`: The package manager used to install, update, and manage software packages.
+- `install`: The command to install a package.
+- `wget`: A command-line tool used to download files from the web. In this case, it’s downloading a file named `dynamodb_local_latest.tar.gz` from an Amazon S3 bucket.
+- `tar`: Used to create and extract archive files in Linux. In this case, it is used to extract the files from a compressed archive (.tar.gz).
+- `-zxvf`: The options following tar specify how the archive should be handled.
+    -z: Tells tar to decompress the file using gzip (since .tar.gz is a gzipped tar archive).
+    -x: Stands for extract. This option tells tar to extract the contents of the archive.
+    -v: Stands for verbose. This option makes tar list the files being extracted as they are processed, so you can see what is happening.
+    -f: Stands for file. This option specifies the name of the archive file that tar should operate on. In this case, it’s dynamodb_local_latest.tar.gz.
+
+#### Results
+DynamoDB and jre were installed in the local Linux environment.
+![alt text](image-16.png)
+
+### 2. Run DynamoDB local
+I started DynamoDB Local on my machine with a single shared database for all users and regions, using the native libraries stored in the DynamoDBLocal_lib directory. *It allows me to test DynamoDB operations without connecting to the actual AWS cloud.*
+
+#### Commands
+- `java`: This is the Java runtime command. It is used to execute Java applications (i.e., run .jar files). The DynamoDB Local application is provided as a .jar file.
+- `-Djava.library.path=./DynamoDBLocal_lib`: This is a Java option that sets the library path to a specific directory.
+    - `-D`: Specifies a system property in Java.
+    - `java.library.path`: This property defines where Java looks for native libraries (such as .so files on Linux, .dll files on Windows, or .dylib files on macOS).
+    - `=./DynamoDBLocal_lib`: This sets the path to the directory where the native libraries needed for DynamoDB Local are located. The `.` indicates the current directory, and `DynamoDBLocal_lib` is a subdirectory containing the necessary libraries.
+- `-jar DynamoDBLocal.jar`: This part tells Java to run a Java Archive (JAR) file. `-jar`: Indicates that the following file is a JAR file to be executed.
+`DynamoDBLocal.jar`: This is the JAR file containing the DynamoDB Local application, which simulates the DynamoDB service locally.
+- `–sharedDb`: This option tells DynamoDB Local to use a single shared database instance instead of creating separate databases for each user account and region.
+
+#### Results
+The DynamoDB local was running.
+```bash
+Initializing DynamoDB Local with the following configuration:
+Port:   8000
+InMemory:       false
+Version:        1.25.0
+DbPath: null
+SharedDb:       false
+shouldDelayTransientStatuses:   false
+CorsParams:     null
+```
+### 3. Write a DynamoDB table
+I created a DynamoDB table, extracted attributes of files of the S3 bucket I created in previous steps, and saved those information into the DynamoDB table using the following Python script. 
+
+#### Python script `fileinfo.py`
+```python
+import boto3
+from botocore.exceptions import ClientError
+import os
+
+# Initialise clients for DynamoDB and S3
+dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+s3 = boto3.client('s3')
+
+# Define the S3 bucket name
+BUCKET_NAME = '22756463-cloudstorage'
+# Define the DynamoDB table name
+TABLE_NAME = 'CloudFiles'
+
+# Create the DynamoDB table
+def create_cloudfiles_table():
+    # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb/client/create_table.html
+    try:
+        table = dynamodb.create_table(
+            TableName=TABLE_NAME,
+            KeySchema=[
+                {'AttributeName': 'userId', 'KeyType': 'HASH'},  # Partition key
+                {'AttributeName': 'fileName', 'KeyType': 'RANGE'},  # Sort key
+            ],
+            AttributeDefinitions=[
+                {'AttributeName': 'userId', 'AttributeType': 'S'},  # String type
+                {'AttributeName': 'fileName', 'AttributeType': 'S'},  # String type
+            ],
+            ProvisionedThroughput={'ReadCapacityUnits': 10, 'WriteCapacityUnits': 10}
+        )
+        table.meta.client.get_waiter('table_exists').wait(TableName=TABLE_NAME)
+        print(f"Table {TABLE_NAME} created successfully.")
+        return table
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'ResourceInUseException':
+            print(f"Table {TABLE_NAME} already exists.")
+        else:
+            raise
+
+# Get the attributes for each file in the S3 bucket
+def get_s3_file_attributes(bucket_name):
+    try:
+        # List all files in the S3 bucket
+        response = s3.list_objects_v2(Bucket=bucket_name)
+
+        if 'Contents' not in response:
+            print(f"No files found in bucket {bucket_name}.")
+            return []
+
+        files = []
+        # Iterate through each file in the bucket
+        for object in response['Contents']:
+            s3_key = object['Key']
+
+            # Get the ACL (Access Control List) for the file
+            acl_response = s3.get_object_acl(Bucket=bucket_name, Key=s3_key)
+            userId = acl_response['Owner']['ID']
+            owner = acl_response['Owner']['DisplayName']
+            permission = acl_response['Grants'][0]['Permission']
+
+            # Construct the file attributes
+            file_info = {
+                'userId': userId, 
+                'fileName': s3_key.split('/')[-1],
+                'path': s3_key,
+                'lastUpdated': object['LastModified'].isoformat(),
+                'owner': owner,  
+                'permissions': permission  
+            }
+            files.append(file_info)
+        return files
+
+    except ClientError as e:
+        print(f"Error accessing S3 bucket: {e}")
+        return []
+
+# Write file attributes to DynamoDB
+def write_to_dynamodb(table_name, files):
+    table = dynamodb.Table(table_name)
+
+    for file_info in files:
+        try:
+            # Insert the file attributes as a new item in the DynamoDB table
+            table.put_item(Item=file_info)
+            print(f"Successfully inserted: {file_info['fileName']}")
+        except ClientError as e:
+            print(f"Error inserting {file_info['fileName']} into DynamoDB: {e.response['Error']['Message']}")
+
+# Main function
+if __name__ == "__main__":
+    # Step 1: Create the table
+    create_cloudfiles_table()
+
+    # Step 2: Get file attributes from S3
+    files = get_s3_file_attributes(BUCKET_NAME)
+
+    # Step 3: Write the attributes to DynamoDB
+    if files:
+        write_to_dynamodb(TABLE_NAME, files)
+        print("Done.")
+    else:
+        print("No files to insert.")
+```
+
+#### Results
+Successfully inserted information about `rootfile.txt` and `subfile.txt`.
+
+## [5] Scan the table
+I scanned and output the table in the command line interface by using command `aws dynamodb scan --table-name CloudFiles --endpoint-url http://localhost:8000`.
+
+### Commands
+- `aws dynamodb scan`: This scans the entire CloudFiles table and returns all items.
+- `--table-name CloudFiles`: Specifies the DynamoDB table I created (CloudFiles).
+- `--endpoint-url http://localhost:8000`: This flag is used only if running DynamoDB locally. It specifies the local endpoint.
+
+### Results
+```bash
+{
+    "Items": [
+        {
+            "owner": {
+                "S": "zhi.zhang"
+            },
+            "path": {
+                "S": "rootdir/rootfile.txt"
+            },
+            "lastUpdated": {
+                "S": "2024-09-07T13:00:00+00:00"
+            },
+            "fileName": {
+                "S": "rootfile.txt"
+            },
+            "userId": {
+                "S": "2a5fac7aada1ad2caa48c9ab08cc4e2428d4eb596108daa3b59f1204ae96482e"
+            },
+            "permissions": {
+                "S": "FULL_CONTROL"
+            }
+        },
+        {
+            "owner": {
+                "S": "zhi.zhang"
+            },
+            "path": {
+                "S": "rootdir/subdir/subfile.txt"
+            },
+            "lastUpdated": {
+                "S": "2024-09-07T13:00:00+00:00"
+            },
+            "fileName": {
+                "S": "subfile.txt"
+            },
+            "userId": {
+                "S": "2a5fac7aada1ad2caa48c9ab08cc4e2428d4eb596108daa3b59f1204ae96482e"
+            },
+            "permissions": {
+                "S": "FULL_CONTROL"
+            }
+        }
+    ],
+    "Count": 2,
+    "ScannedCount": 2,
+    "ConsumedCapacity": null
+}
+```
+
+## [6] Delete the table
+I deleted the created DynamoDB table using command `aws dynamodb delete-table --table-name CloudFiles --endpoint-url http://localhost:8000
+`, and deleted the created S3 bucket from AWS console.
+
+### Commands
+- `aws dynamodb delete-table`: This command deletes a DynamoDB table.
+- `--table-name CloudFiles`: Specifies the name of the table I want to delete (in this case, CloudFiles).
+- `-endpoint-url http://localhost:8000`: If using DynamoDB Local, I need to specify the endpoint URL.
+
+### Results
+The DynamoDB table is deleted.
+![alt text](image-17.png)
+
+
 <div style="page-break-after: always;"></div>
 
 # Lab 4
+
+## Apply a policy to restrict permissions on bucket
+I applied a policy on the S3 bucket to restrict access from other users by utilising a Python script as follows.
+
+### [1] Write a Python script
+#### Python script `apply_policy.py`
+```python
+import boto3
+import json
+
+# Initialise the S3 client
+s3 = boto3.client('s3')
+
+bucket_name = '22756463-cloudstorage' 
+student_number = '22756463'
+
+# Define the bucket policy
+bucket_policy = {
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Sid": "AllowAllS3ActionsInUserFolderForUserOnly",
+        "Effect": "Deny",
+        "Principal": "*",
+        "Action": "s3:*",
+        "Resource": f"arn:aws:s3:::{bucket_name}/folder1/folder2/*",
+        "Condition": {
+            "StringNotLike": {
+                "aws:username": f"{student_number}@student.uwa.edu.au"
+            }
+        }
+    }]
+}
+
+# Convert the policy from dictionary to JSON format
+bucket_policy_json = json.dumps(bucket_policy)
+
+# Apply the policy to the S3 bucket
+def apply_bucket_policy(bucket_name, bucket_policy_json):
+    try:
+        # Set the bucket policy
+        s3.put_bucket_policy(Bucket=bucket_name, Policy=bucket_policy_json)
+        print(f"Policy applied successfully to bucket {bucket_name}")
+    except Exception as e:
+        print(f"Error applying policy: {e}")
+
+if __name__ == "__main__":
+    # Call the function to apply the policy
+    apply_bucket_policy(bucket_name, bucket_policy_json)
+```
+
+#### Results
+Policy applied to the S3 bucket.
+
+### [2] Check whether the script works
+I checked the effect of the script by asking someone else to access the folder called `rootdir` in the S3 bucket I created.
+
+#### Results
+
+TODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODO
+
+## AES Encryption using KMS
+### [1] Create a KMS key
+
+#### Python script `create_kms.py`
+```python
+import boto3
+
+# Initialise the KMS client
+kms = boto3.client('kms')
+
+student_number = '22756463'
+
+# Create a KMS key
+try:
+    response = kms.create_key(
+        Description="KMS key for student number",
+        KeyUsage='ENCRYPT_DECRYPT',
+    )
+    key_id = response['KeyMetadata']['KeyId']
+    print(f"KMS Key created with KeyId: {key_id}")
+except Exception as e:
+    print(f"Error creating KMS key: {e}")
+
+# Create an alias for the KMS key
+try:
+    alias_name = f'alias/{student_number}'
+    kms.create_alias(
+        AliasName=alias_name,
+        TargetKeyId=key_id
+    )
+    print(f"Alias '{alias_name}' created for KMS KeyId: {key_id}")
+except Exception as e:
+    print(f"Error creating alias: {e}")
+```
+
+#### Results
+KMS Key created with KeyId: `b7717fc6-fe96-48a7-bc91-fb6a9d8656a3`.
+Alias 'alias/22756463' created for KMS KeyId: b7717fc6-fe96-48a7-bc91-fb6a9d8656a3.
+
+### [2] Attach a policy to the created KMS key
+
+### [3] Check whether the script works
+
+### [4] Use the created KMS key for encryption/decryption
+
+### [5] Apply pycryptodome for encryption/decryption
+
+
+## Answer the following question
+
+### Question:
+What is the performance difference between using KMS and using the custom solution?
+
+### Answer:
+
+
 
 <div style="page-break-after: always;"></div>
 
