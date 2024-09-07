@@ -889,6 +889,122 @@ The DynamoDB table is deleted.
 
 # Lab 4
 
+## Apply a policy to restrict permissions on bucket
+I applied a policy on the S3 bucket to restrict access from other users by utilising a Python script as follows.
+
+### [1] Write a Python script
+#### Python script `apply_policy.py`
+```python
+import boto3
+import json
+
+# Initialise the S3 client
+s3 = boto3.client('s3')
+
+bucket_name = '22756463-cloudstorage' 
+student_number = '22756463'
+
+# Define the bucket policy
+bucket_policy = {
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Sid": "AllowAllS3ActionsInUserFolderForUserOnly",
+        "Effect": "Deny",
+        "Principal": "*",
+        "Action": "s3:*",
+        "Resource": f"arn:aws:s3:::{bucket_name}/folder1/folder2/*",
+        "Condition": {
+            "StringNotLike": {
+                "aws:username": f"{student_number}@student.uwa.edu.au"
+            }
+        }
+    }]
+}
+
+# Convert the policy from dictionary to JSON format
+bucket_policy_json = json.dumps(bucket_policy)
+
+# Apply the policy to the S3 bucket
+def apply_bucket_policy(bucket_name, bucket_policy_json):
+    try:
+        # Set the bucket policy
+        s3.put_bucket_policy(Bucket=bucket_name, Policy=bucket_policy_json)
+        print(f"Policy applied successfully to bucket {bucket_name}")
+    except Exception as e:
+        print(f"Error applying policy: {e}")
+
+if __name__ == "__main__":
+    # Call the function to apply the policy
+    apply_bucket_policy(bucket_name, bucket_policy_json)
+```
+
+#### Results
+Policy applied to the S3 bucket.
+
+### [2] Check whether the script works
+I checked the effect of the script by asking someone else to access the folder called `rootdir` in the S3 bucket I created.
+
+#### Results
+
+TODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODO
+
+## AES Encryption using KMS
+### [1] Create a KMS key
+
+#### Python script `create_kms.py`
+```python
+import boto3
+
+# Initialise the KMS client
+kms = boto3.client('kms')
+
+student_number = '22756463'
+
+# Create a KMS key
+try:
+    response = kms.create_key(
+        Description="KMS key for student number",
+        KeyUsage='ENCRYPT_DECRYPT',
+    )
+    key_id = response['KeyMetadata']['KeyId']
+    print(f"KMS Key created with KeyId: {key_id}")
+except Exception as e:
+    print(f"Error creating KMS key: {e}")
+
+# Create an alias for the KMS key
+try:
+    alias_name = f'alias/{student_number}'
+    kms.create_alias(
+        AliasName=alias_name,
+        TargetKeyId=key_id
+    )
+    print(f"Alias '{alias_name}' created for KMS KeyId: {key_id}")
+except Exception as e:
+    print(f"Error creating alias: {e}")
+```
+
+#### Results
+KMS Key created with KeyId: `b7717fc6-fe96-48a7-bc91-fb6a9d8656a3`.
+Alias 'alias/22756463' created for KMS KeyId: b7717fc6-fe96-48a7-bc91-fb6a9d8656a3.
+
+### [2] Attach a policy to the created KMS key
+
+### [3] Check whether the script works
+
+### [4] Use the created KMS key for encryption/decryption
+
+### [5] Apply pycryptodome for encryption/decryption
+
+
+## Answer the following question
+
+### Question:
+What is the performance difference between using KMS and using the custom solution?
+
+### Answer:
+
+
+
 <div style="page-break-after: always;"></div>
 
 # Lab 5
