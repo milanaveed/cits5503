@@ -579,7 +579,7 @@ def upload_file(folder_name, file, file_name):
     print("Uploading %s" % file)
 
     try:
-        s3.upload_file(file, ROOT_S3_DIR, "%s/%s" % (folder_name, file_name))
+        s3.upload_file(file, ROOT_S3_DIR, folder_name+file_name)
     except Exception as error:
         print(error)
         pass
@@ -616,9 +616,40 @@ print("done")
 ```
 
 ### Results
+Files uploaded to the S3 bucket with the same file structure as shown in Step 1.
 
+![alt text](image-15.png)
 
 ## [3] Restore from S3
+I downloaded the files and directories from the S3 bucket by running the following Python script.
+
+### Python script: `restorefromcloud.py`
+```python
+import os
+import boto3
+
+# Initialise the S3 client
+s3 = boto3.client('s3')
+
+# Define the S3 bucket name
+BUCKET_NAME = '22756463-cloudstorage'  
+LOCAL_ROOT_DIR = './restored_files'  
+
+
+for object in s3.list_objects(Bucket = BUCKET_NAME)['Contents']:
+    object_key = object['Key']
+    print("Downloading %s" % object_key)
+    cloud_dir_path = os.path.dirname(object_key)
+    local_dir_path = os.path.join(LOCAL_ROOT_DIR, cloud_dir_path)
+    if not os.path.exists(local_dir_path):
+        os.makedirs(local_dir_path)
+    local_file_path = os.path.join(LOCAL_ROOT_DIR, object_key)
+    s3.download_file(BUCKET_NAME, object_key, local_file_path)
+```
+
+### Results
+The files and directories from the S3 bucket were downloaded into the local Linux environment.
+
 
 ## [4] Write information about files to DynamoDB
 
