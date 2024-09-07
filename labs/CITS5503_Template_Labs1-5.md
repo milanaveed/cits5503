@@ -674,15 +674,200 @@ I created a direcotry named `dynamodb` and changed into that directory by using 
 DynamoDB and jre were installed in the local Linux environment.
 ![alt text](image-16.png)
 
-
 ### 2. Run DynamoDB local
+I started DynamoDB Local on my machine with a single shared database for all users and regions, using the native libraries stored in the DynamoDBLocal_lib directory. *It allows me to test DynamoDB operations without connecting to the actual AWS cloud.*
 
 #### Commands
+- `java`: This is the Java runtime command. It is used to execute Java applications (i.e., run .jar files). The DynamoDB Local application is provided as a .jar file.
+- `-Djava.library.path=./DynamoDBLocal_lib`: This is a Java option that sets the library path to a specific directory.
+    - `-D`: Specifies a system property in Java.
+    - `java.library.path`: This property defines where Java looks for native libraries (such as .so files on Linux, .dll files on Windows, or .dylib files on macOS).
+    - `=./DynamoDBLocal_lib`: This sets the path to the directory where the native libraries needed for DynamoDB Local are located. The `.` indicates the current directory, and `DynamoDBLocal_lib` is a subdirectory containing the necessary libraries.
+- `-jar DynamoDBLocal.jar`: This part tells Java to run a Java Archive (JAR) file. `-jar`: Indicates that the following file is a JAR file to be executed.
+`DynamoDBLocal.jar`: This is the JAR file containing the DynamoDB Local application, which simulates the DynamoDB service locally.
+- `–sharedDb`: This option tells DynamoDB Local to use a single shared database instance instead of creating separate databases for each user account and region.
 
 #### Results
+The DynamoDB local was running.
+```bash
+Initializing DynamoDB Local with the following configuration:
+Port:   8000
+InMemory:       false
+Version:        1.25.0
+DbPath: null
+SharedDb:       false
+shouldDelayTransientStatuses:   false
+CorsParams:     null
+```
+### 3. Write a DynamoDB table
+I created a DynamoDB table, extracted attributes of files of the S3 bucket I created in previous steps, and saved those information into the DynamoDB table using the following Python script. 
 
+#### Python script `fileinfo.py`
+```python
+import boto3
+from botocore.exceptions import ClientError
+import os
+
+# Initialise clients for DynamoDB and S3
+dynamodb = boto3.resource('dynamodb', endpoint_url="http://localhost:8000")
+s3 = boto3.client('s3')
+
+# Define the S3 bucket name
+BUCKET_NAME = '22756463-cloudstorage'
+# Define the DynamoDB table name
+TABLE_NAME = 'CloudFiles'
+
+# Create the DynamoDB table
+def create_cloudfiles_table():
+    # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb/client/create_table.html
+    try:
+        table = dynamodb.create_table(
+            TableName=TABLE_NAME,
+            KeySchema=[
+                {'AttributeName': 'userId', 'KeyType': 'HASH'},  # Partition key
+                {'AttributeName': 'fileName', 'KeyType': 'RANGE'},  # Sort key
+            ],
+            AttributeDefinitions=[
+                {'AttributeName': 'userId', 'AttributeType': 'S'},  # String type
+                {'AttributeName': 'fileName', 'AttributeType': 'S'},  # String type
+            ],
+            ProvisionedThroughput={'ReadCapacityUnits': 10, 'WriteCapacityUnits': 10}
+        )
+        table.meta.client.get_waiter('table_exists').wait(TableName=TABLE_NAME)
+        print(f"Table {TABLE_NAME} created successfully.")
+        return table
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'ResourceInUseException':
+            print(f"Table {TABLE_NAME} already exists.")
+        else:
+            raise
+
+# Get the attributes for each file in the S3 bucket
+def get_s3_file_attributes(bucket_name):
+    try:
+        # List all files in the S3 bucket
+        response = s3.list_objects_v2(Bucket=bucket_name)
+
+        if 'Contents' not in response:
+            print(f"No files found in bucket {bucket_name}.")
+            return []
+
+        files = []
+        # Iterate through each file in the bucket
+        for object in response['Contents']:
+            s3_key = object['Key']
+
+            # Get the ACL (Access Control List) for the file
+            acl_response = s3.get_object_acl(Bucket=bucket_name, Key=s3_key)
+            userId = acl_response['Owner']['ID']
+            owner = acl_response['Owner']['DisplayName']
+            permission = acl_response['Grants'][0]['Permission']
+
+            # Construct the file attributes
+            file_info = {
+                'userId': userId, 
+                'fileName': s3_key.split('/')[-1],
+                'path': s3_key,
+                'lastUpdated': object['LastModified'].isoformat(),
+                'owner': owner,  
+                'permissions': permission  
+            }
+            files.append(file_info)
+        return files
+
+    except ClientError as e:
+        print(f"Error accessing S3 bucket: {e}")
+        return []
+
+# Write file attributes to DynamoDB
+def write_to_dynamodb(table_name, files):
+    table = dynamodb.Table(table_name)
+
+    for file_info in files:
+        try:
+            # Insert the file attributes as a new item in the DynamoDB table
+            table.put_item(Item=file_info)
+            print(f"Successfully inserted: {file_info['fileName']}")
+        except ClientError as e:
+            print(f"Error inserting {file_info['fileName']} into DynamoDB: {e.response['Error']['Message']}")
+
+# Main function
+if __name__ == "__main__":
+    # Step 1: Create the table
+    create_cloudfiles_table()
+
+    # Step 2: Get file attributes from S3
+    files = get_s3_file_attributes(BUCKET_NAME)
+
+    # Step 3: Write the attributes to DynamoDB
+    if files:
+        write_to_dynamodb(TABLE_NAME, files)
+        print("Done.")
+    else:
+        print("No files to insert.")
+```
+
+#### Results
+Successfully inserted information about `rootfile.txt` and `subfile.txt`.
 
 ## [5] Scan the table
+I scanned and output the table in the command line interface by using command `aws dynamodb scan --table-name CloudFiles --endpoint-url http://localhost:8000`.
+
+### Commands
+- `aws dynamodb scan`: This scans the entire CloudFiles table and returns all items.
+- `--table-name CloudFiles`: Specifies the DynamoDB table I created (CloudFiles).
+- `--endpoint-url http://localhost:8000`: This flag is used only if running DynamoDB locally. It specifies the local endpoint.
+
+### Results
+```bash
+{
+    "Items": [
+        {
+            "owner": {
+                "S": "zhi.zhang"
+            },
+            "path": {
+                "S": "rootdir/rootfile.txt"
+            },
+            "lastUpdated": {
+                "S": "2024-09-07T13:00:00+00:00"
+            },
+            "fileName": {
+                "S": "rootfile.txt"
+            },
+            "userId": {
+                "S": "2a5fac7aada1ad2caa48c9ab08cc4e2428d4eb596108daa3b59f1204ae96482e"
+            },
+            "permissions": {
+                "S": "FULL_CONTROL"
+            }
+        },
+        {
+            "owner": {
+                "S": "zhi.zhang"
+            },
+            "path": {
+                "S": "rootdir/subdir/subfile.txt"
+            },
+            "lastUpdated": {
+                "S": "2024-09-07T13:00:00+00:00"
+            },
+            "fileName": {
+                "S": "subfile.txt"
+            },
+            "userId": {
+                "S": "2a5fac7aada1ad2caa48c9ab08cc4e2428d4eb596108daa3b59f1204ae96482e"
+            },
+            "permissions": {
+                "S": "FULL_CONTROL"
+            }
+        }
+    ],
+    "Count": 2,
+    "ScannedCount": 2,
+    "ConsumedCapacity": null
+}
+```
 
 ## [6] Delete the table
 
