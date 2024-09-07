@@ -950,6 +950,7 @@ TODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODO
 
 ## AES Encryption using KMS
 ### [1] Create a KMS key
+I created a KMS key by running the following Python script.
 
 #### Python script `create_kms.py`
 ```python
@@ -988,10 +989,138 @@ KMS Key created with KeyId: `b7717fc6-fe96-48a7-bc91-fb6a9d8656a3`.
 Alias 'alias/22756463' created for KMS KeyId: b7717fc6-fe96-48a7-bc91-fb6a9d8656a3.
 
 ### [2] Attach a policy to the created KMS key
+I updated the Python script in Step 1 and attached a policy to the KMS key created in step 1.
+
+#### Python script `update_policy.py`
+```python
+import boto3
+import json
+
+# Initialise the KMS client
+kms = boto3.client("kms")
+
+# Replace with your student number and username
+student_number = "22756463"
+alias_name = f"alias/{student_number}"
+
+# Create a KMS key
+try:
+    response = kms.create_key(
+        Description="KMS key for student number",
+        KeyUsage="ENCRYPT_DECRYPT",  # Key usage can be 'ENCRYPT_DECRYPT' for most cases
+    )
+    key_id = response["KeyMetadata"]["KeyId"]
+    print(f"KMS Key created with KeyId: {key_id}")
+except Exception as e:
+    print(f"Error creating KMS key: {e}")
+
+# Check if alias already exists and delete it
+try:
+    response = kms.list_aliases()
+    for alias in response['Aliases']:
+        if alias['AliasName'] == alias_name:
+            # If the alias exists, delete it
+            print(f"Alias {alias_name} already exists. Deleting it.")
+            kms.delete_alias(AliasName=alias_name)
+            break
+except Exception as e:
+    print(f"Error checking or deleting existing alias: {e}")
+
+# Create an alias for the KMS key
+try:
+    kms.create_alias(AliasName=alias_name, TargetKeyId=key_id)
+    print(f"Alias '{alias_name}' created for KMS KeyId: {key_id}")
+except Exception as e:
+    print(f"Error creating alias: {e}")
+
+# Attach a policy to the KMS key
+try:
+    # Define the key policy
+    key_policy = {
+        "Version": "2012-10-17",
+        "Id": "key-consolepolicy-3",
+        "Statement": [
+            {
+                "Sid": "Enable IAM User Permissions",
+                "Effect": "Allow",
+                "Principal": {"AWS": "arn:aws:iam::489389878001:root"},
+                "Action": "kms:*",
+                "Resource": "*",
+            },
+            {
+                "Sid": "Allow access for Key Administrators",
+                "Effect": "Allow",
+                "Principal": {"AWS": "arn:aws:iam::489389878001:user/22756463@student.uwa.edu.au"},
+                "Action": [
+                    "kms:Create*",
+                    "kms:Describe*",
+                    "kms:Enable*",
+                    "kms:List*",
+                    "kms:Put*",
+                    "kms:Update*",
+                    "kms:Revoke*",
+                    "kms:Disable*",
+                    "kms:Get*",
+                    "kms:Delete*",
+                    "kms:TagResource",
+                    "kms:UntagResource",
+                    "kms:ScheduleKeyDeletion",
+                    "kms:CancelKeyDeletion",
+                ],
+                "Resource": "*",
+            },
+            {
+                "Sid": "Allow use of the key",
+                "Effect": "Allow",
+                "Principal": {"AWS": "arn:aws:iam::489389878001:user/22756463@student.uwa.edu.au"},
+                "Action": [
+                    "kms:Encrypt",
+                    "kms:Decrypt",
+                    "kms:ReEncrypt*",
+                    "kms:GenerateDataKey*",
+                    "kms:DescribeKey",
+                ],
+                "Resource": "*",
+            },
+            {
+                "Sid": "Allow attachment of persistent resources",
+                "Effect": "Allow",
+                "Principal": {"AWS": "arn:aws:iam::489389878001:user/22756463@student.uwa.edu.au"},
+                "Action": ["kms:CreateGrant", "kms:ListGrants", "kms:RevokeGrant"],
+                "Resource": "*",
+                "Condition": {"Bool": {"kms:GrantIsForAWSResource": "true"}},
+            },
+        ],
+    }
+
+    # Attach the policy to the KMS key
+    kms.put_key_policy(
+        KeyId=key_id,
+        PolicyName="default",
+        Policy=json.dumps(key_policy),  # Convert the policy dictionary to a JSON string
+    )
+    print(f"Key policy attached to KMS KeyId: {key_id}")
+except Exception as e:
+    print(f"Error attaching key policy: {e}")
+```
+
+#### Results
+The key policy is attached to the KMS key.
 
 ### [3] Check whether the script works
+1. I logged in to the AWS console and navigated to the KMS dashboard.
+2. I clicked on the Customer managed keys on the left panel.
+3. I searched for my Key Alias ("alias/22756463") and clicked on the Key ID to view more details.
+4. I clicked on the Key Policy tab to view the key policy. I looked for the section in the policy that has the "Allow access for Key Administrators" and "Allow use of the key".
+
+#### Results
+The script worked. My username is the key administrator and key user.
+![alt text](image-20.png)
+![alt text](image-19.png)
 
 ### [4] Use the created KMS key for encryption/decryption
+
+
 
 ### [5] Apply pycryptodome for encryption/decryption
 
