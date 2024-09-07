@@ -656,6 +656,8 @@ The files and directories from the S3 bucket were downloaded into the local Linu
 ### 1. Install DynamoDB and jre
 I created a direcotry named `dynamodb` and changed into that directory by using commands `mkdir dynamodb` and `cd dynamodb`. Then I installed jre (Java Runtime Environment) using command `sudo apt-get install default-jre` and downloaded DynamoDB compressed file using `wget https://s3-ap-northeast-1.amazonaws.com/dynamodb-local-tokyo/dynamodb_local_latest.tar.gz`. I extracted files from the downloaded DynamoDB compressed archive format by using command `tar -zxvf dynamodb_local_latest.tar.gz`.
 
+Note for myself: Amazon DynamoDB is a fully managed, scalable NoSQL database service offering fast, low-latency data access for high-performance applications.
+
 #### Commands
 - `mkdir`: create a directory.
 - `cd`: change into another directory.
@@ -870,6 +872,17 @@ I scanned and output the table in the command line interface by using command `a
 ```
 
 ## [6] Delete the table
+I deleted the created DynamoDB table using command `aws dynamodb delete-table --table-name CloudFiles --endpoint-url http://localhost:8000
+`, and deleted the created S3 bucket from AWS console.
+
+### Commands
+- `aws dynamodb delete-table`: This command deletes a DynamoDB table.
+- `--table-name CloudFiles`: Specifies the name of the table I want to delete (in this case, CloudFiles).
+- `-endpoint-url http://localhost:8000`: If using DynamoDB Local, I need to specify the endpoint URL.
+
+### Results
+The DynamoDB table is deleted.
+![alt text](image-17.png)
 
 
 <div style="page-break-after: always;"></div>
