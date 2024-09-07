@@ -537,6 +537,96 @@ I stopped and removed the container by using commands `sudo docker stop my-app` 
 
 # Lab 3
 
+## [1] Preparation
+I prepared items for the program as follows:
+1. I downloaded the Python code `cloudstorage.py` from the directory of [src](https://github.com/zhangzhics/CITS5503_Sem2/blob/master/Labs/src/cloudstorage.py).
+2. I created a directory called `rootdir` by using command `mkdir rootdir`.
+3. Then I changed into the directory `rootdir` by using command `cd rootdir` and write content "1\n2\n3\n4\n5\n" in a file called `rootfile.txt` by using command `nano rootfile.txt`.
+4. I created a directory in "rootdir" called `subdir` by using command `mkdir subdir` and changed into `subdir` by using command `cd subdir`. Then I created a file named `subfile.txt`with the same content by using command `nano subfile.txt`. 
+
+## [2] Save to S3 by updating cloudstorage.py
+I uploaded those files prepared in Step 1 to the newly created S3 bucket by changing the provide Python code to the following.
+
+### Python script: `cloudstorage.py`
+```python
+import os
+import boto3
+import base64
+
+# ------------------------------
+# CITS5503
+#
+# cloudstorage.py
+#
+# skeleton application to copy local files to S3
+#
+# Given a root local directory, will return files in each level and
+# copy to same path on S3
+#
+# ------------------------------ 
+
+ROOT_DIR = '.'
+ROOT_S3_DIR = '22756463-cloudstorage'
+
+s3 = boto3.client("s3")
+
+bucket_region = 'us-east-1'
+
+bucket_config = {'LocationConstraint': bucket_region} 
+
+
+def upload_file(folder_name, file, file_name):
+    print("Uploading %s" % file)
+
+    try:
+        s3.upload_file(file, ROOT_S3_DIR, "%s/%s" % (folder_name, file_name))
+    except Exception as error:
+        print(error)
+        pass
+
+try:
+    # Check if bucket exists
+    s3.head_bucket(Bucket=ROOT_S3_DIR)
+    print(f"Bucket {ROOT_S3_DIR} already exists.")
+except Exception as error:
+    # If bucket does not exist, create it
+    print(f"Creating bucket {ROOT_S3_DIR}...")
+    try:
+        if bucket_region == 'us-east-1':
+            # us-east-1 (N. Virginia) does not require LocationConstraint
+            s3.create_bucket(Bucket=ROOT_S3_DIR)
+        else:
+            response = s3.create_bucket(
+                Bucket=ROOT_S3_DIR,
+                CreateBucketConfiguration=bucket_config
+            )
+            print(f"Bucket {ROOT_S3_DIR} created successfully.")
+    except Exception as error:
+        print(f"Error creating bucket: {str(error)}")
+        raise
+
+
+# parse directory and upload files
+for dir_name, subdir_list, file_list in os.walk(ROOT_DIR, topdown=True):
+    if dir_name != ROOT_DIR:
+        for fname in file_list:
+            upload_file("%s/" % dir_name[2:], "%s/%s" % (dir_name, fname), fname)
+
+print("done")
+```
+
+### Results
+
+
+## [3] Restore from S3
+
+## [4] Write information about files to DynamoDB
+
+## [5] Scan the table
+
+## [6] Delete the table
+
+
 <div style="page-break-after: always;"></div>
 
 # Lab 4
