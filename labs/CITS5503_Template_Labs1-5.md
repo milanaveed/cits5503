@@ -653,6 +653,40 @@ The files and directories from the S3 bucket were downloaded into the local Linu
 
 ## [4] Write information about files to DynamoDB
 
+### 1. Install DynamoDB
+I created a direcotry named `dynamodb` and changed into that directory by using commands `mkdir dynamodb` and `cd dynamodb`.
+
+#### Commands
+- `mkdir`: create a directory.
+- `cd`: change into another directory.
+
+### 2. Install jre
+I installed jre (Java Runtime Environment) using command `sudo apt-get install default-jre` and downloaded DynamoDB using `wget https://s3-ap-northeast-1.amazonaws.com/dynamodb-local-tokyo/dynamodb_local_latest.tar.gz`.
+
+#### Commands
+- `sudo`: Runs the command with superuser (root) privileges.
+- `apt-get`: The package manager used to install, update, and manage software packages.
+- `install`: The command to install a package.
+- `wget`: A command-line tool used to download files from the web. In this case, it’s downloading a file named `dynamodb_local_latest.tar.gz` from an Amazon S3 bucket.
+
+#### Results
+![alt text](image-16.png)
+```bash
+--2024-09-07 21:33:34--  https://s3-ap-northeast-1.amazonaws.com/dynamodb-local-tokyo/dynamodb_local_latest.tar.gz
+Resolving s3-ap-northeast-1.amazonaws.com (s3-ap-northeast-1.amazonaws.com)... 52.219.136.196, 52.219.151.88, 52.219.8.232, ...
+Connecting to s3-ap-northeast-1.amazonaws.com (s3-ap-northeast-1.amazonaws.com)|52.219.136.196|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 54892500 (52M) [application/x-tar]
+Saving to: ‘dynamodb_local_latest.tar.gz’
+
+dynamodb_local_latest.tar.gz  100%[=================================================>]  52.35M  5.21MB/s    in 11s
+
+2024-09-07 21:33:46 (4.56 MB/s) - ‘dynamodb_local_latest.tar.gz’ saved [54892500/54892500]
+```
+
+### 
+
+
 ## [5] Scan the table
 
 ## [6] Delete the table
