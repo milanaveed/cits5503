@@ -1366,8 +1366,28 @@ What is the performance difference between using KMS and using the custom soluti
 
 
 
-
 <div style="page-break-after: always;"></div>
 
 # Lab 5
+
+## Application Load Balancer
+
+### [1] Create 2 EC2 instances
+
+#### Python script `create_instances.py`
+
+
+#### Results
+
+### [2] Create an Application Load Balancer
+
+#### Commands
+
+#### Results
+
+### [3] Test the Application Load Balancer
+
+#### Commands
+
+#### Results
 
