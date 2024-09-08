@@ -1359,6 +1359,12 @@ What is the performance difference between using KMS and using the custom soluti
 
 ### Answer:
 
+- Latency: Using KMS involves network communication with the AWS service and thus the latency can be higher than the custom solution which operates locally and requires no network. 
+- Ease of use: Using KMS is easier because AWS handles the key storage and mangement, whereas in the custom solution we need to manage the key (password) ourselves, and the code implementation is more complicated.
+- Security: Using KMS is more secure because the AWS modules handle encryption automatically, whereas in the custom solution requires us to define the password ourselves and if it is chosen unwisely, the encryption is less secure.
+- Cost: Using KMS can be more costly because it is charged based on the number of encryption and decryption requests, whereas the custom solution requires no recurring costs each encryption or decryption operation.
+
+
 
 
 <div style="page-break-after: always;"></div>
