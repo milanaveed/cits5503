@@ -950,6 +950,7 @@ TODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODO
 
 ## AES Encryption using KMS
 ### [1] Create a KMS key
+I created a KMS key by running the following Python script.
 
 #### Python script `create_kms.py`
 ```python
@@ -988,13 +989,368 @@ KMS Key created with KeyId: `b7717fc6-fe96-48a7-bc91-fb6a9d8656a3`.
 Alias 'alias/22756463' created for KMS KeyId: b7717fc6-fe96-48a7-bc91-fb6a9d8656a3.
 
 ### [2] Attach a policy to the created KMS key
+I updated the Python script in Step 1 and attached a policy to the KMS key created in step 1.
+
+#### Python script `update_policy.py`
+```python
+import boto3
+import json
+
+# Initialise the KMS client
+kms = boto3.client("kms")
+
+# Replace with your student number and username
+student_number = "22756463"
+alias_name = f"alias/{student_number}"
+
+# Create a KMS key
+try:
+    response = kms.create_key(
+        Description="KMS key for student number",
+        KeyUsage="ENCRYPT_DECRYPT",  # Key usage can be 'ENCRYPT_DECRYPT' for most cases
+    )
+    key_id = response["KeyMetadata"]["KeyId"]
+    print(f"KMS Key created with KeyId: {key_id}")
+except Exception as e:
+    print(f"Error creating KMS key: {e}")
+
+# Check if alias already exists and delete it
+try:
+    response = kms.list_aliases()
+    for alias in response['Aliases']:
+        if alias['AliasName'] == alias_name:
+            # If the alias exists, delete it
+            print(f"Alias {alias_name} already exists. Deleting it.")
+            kms.delete_alias(AliasName=alias_name)
+            break
+except Exception as e:
+    print(f"Error checking or deleting existing alias: {e}")
+
+# Create an alias for the KMS key
+try:
+    kms.create_alias(AliasName=alias_name, TargetKeyId=key_id)
+    print(f"Alias '{alias_name}' created for KMS KeyId: {key_id}")
+except Exception as e:
+    print(f"Error creating alias: {e}")
+
+# Attach a policy to the KMS key
+try:
+    # Define the key policy
+    key_policy = {
+        "Version": "2012-10-17",
+        "Id": "key-consolepolicy-3",
+        "Statement": [
+            {
+                "Sid": "Enable IAM User Permissions",
+                "Effect": "Allow",
+                "Principal": {"AWS": "arn:aws:iam::489389878001:root"},
+                "Action": "kms:*",
+                "Resource": "*",
+            },
+            {
+                "Sid": "Allow access for Key Administrators",
+                "Effect": "Allow",
+                "Principal": {"AWS": "arn:aws:iam::489389878001:user/22756463@student.uwa.edu.au"},
+                "Action": [
+                    "kms:Create*",
+                    "kms:Describe*",
+                    "kms:Enable*",
+                    "kms:List*",
+                    "kms:Put*",
+                    "kms:Update*",
+                    "kms:Revoke*",
+                    "kms:Disable*",
+                    "kms:Get*",
+                    "kms:Delete*",
+                    "kms:TagResource",
+                    "kms:UntagResource",
+                    "kms:ScheduleKeyDeletion",
+                    "kms:CancelKeyDeletion",
+                ],
+                "Resource": "*",
+            },
+            {
+                "Sid": "Allow use of the key",
+                "Effect": "Allow",
+                "Principal": {"AWS": "arn:aws:iam::489389878001:user/22756463@student.uwa.edu.au"},
+                "Action": [
+                    "kms:Encrypt",
+                    "kms:Decrypt",
+                    "kms:ReEncrypt*",
+                    "kms:GenerateDataKey*",
+                    "kms:DescribeKey",
+                ],
+                "Resource": "*",
+            },
+            {
+                "Sid": "Allow attachment of persistent resources",
+                "Effect": "Allow",
+                "Principal": {"AWS": "arn:aws:iam::489389878001:user/22756463@student.uwa.edu.au"},
+                "Action": ["kms:CreateGrant", "kms:ListGrants", "kms:RevokeGrant"],
+                "Resource": "*",
+                "Condition": {"Bool": {"kms:GrantIsForAWSResource": "true"}},
+            },
+        ],
+    }
+
+    # Attach the policy to the KMS key
+    kms.put_key_policy(
+        KeyId=key_id,
+        PolicyName="default",
+        Policy=json.dumps(key_policy),  # Convert the policy dictionary to a JSON string
+    )
+    print(f"Key policy attached to KMS KeyId: {key_id}")
+except Exception as e:
+    print(f"Error attaching key policy: {e}")
+```
+
+#### Results
+The key policy is attached to the KMS key.
 
 ### [3] Check whether the script works
+1. I logged in to the AWS console and navigated to the KMS dashboard.
+2. I clicked on the Customer managed keys on the left panel.
+3. I searched for my Key Alias ("alias/22756463") and clicked on the Key ID to view more details.
+4. I clicked on the Key Policy tab to view the key policy. I looked for the section in the policy that has the "Allow access for Key Administrators" and "Allow use of the key".
+
+#### Results
+The script worked. My username is the key administrator and key user.
+![alt text](image-20.png)
+![alt text](image-19.png)
 
 ### [4] Use the created KMS key for encryption/decryption
+I used the following Python script to download files from the S3 bucket, then encrypt and decrpt them. I saved the encrypted and decrypted files in the same folder as the original files.
+
+#### Python script `encrypt.py`
+```python
+import boto3
+import os
+
+# Initialise the clients
+kms = boto3.client('kms')
+s3 = boto3.client('s3')
+
+bucket_name = '22756463-cloudstorage'  # S3 bucket name
+key_id = 'a9b69f17-c23c-4fa8-ba73-a20940e141aa'  # KMS Key ID
+local_directory = './restored_files'  # Local directory to store files obtained from cloud
+
+# Step 1: Download files from S3 bucket to local directory
+def download_s3_files(bucket_name, local_directory):
+    if not os.path.exists(local_directory):
+        os.makedirs(local_directory)
+
+    # List files in the S3 bucket
+    objects = s3.list_objects_v2(Bucket=bucket_name)
+
+    if 'Contents' in objects:
+        for obj in objects['Contents']:
+            file_key = obj['Key']
+            file_path = os.path.join(local_directory, file_key)
+
+            # Create subdirectories if necessary
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+            # Download the file from S3 to local directory
+            s3.download_file(bucket_name, file_key, file_path)
+            print(f"Downloaded {file_key} to {file_path}")
+    else:
+        print("No files found in the S3 bucket.")
+
+# Step 2: Encrypt the file using KMS
+def encrypt_file(file_path, key_id):
+    with open(file_path, 'rb') as file:
+        file_data = file.read()
+
+    # Encrypt the data using KMS
+    encrypted_data = kms.encrypt(KeyId=key_id, Plaintext=file_data)['CiphertextBlob']
+
+    # Write the encrypted data to a new file
+    encrypted_file_path = f"{file_path}.encrypted"
+    with open(encrypted_file_path, 'wb') as encrypted_file:
+        encrypted_file.write(encrypted_data)
+
+    print(f"Encrypted file written to {encrypted_file_path}")
+    return encrypted_file_path
+
+# Step 3: Decrypt the encrypted file using KMS
+def decrypt_file(encrypted_file_path):
+    with open(encrypted_file_path, 'rb') as encrypted_file:
+        encrypted_data = encrypted_file.read()
+
+    # Decrypt the data using KMS
+    decrypted_data = kms.decrypt(CiphertextBlob=encrypted_data)['Plaintext']
+
+    # Write the decrypted data to a new file
+    decrypted_file_path = f"{encrypted_file_path}.decrypted"
+    with open(decrypted_file_path, 'wb') as decrypted_file:
+        decrypted_file.write(decrypted_data)
+
+    print(f"Decrypted file written to {decrypted_file_path}")
+    return decrypted_file_path
+
+
+def main():
+    # Download the files from the S3 bucket
+    download_s3_files(bucket_name, local_directory)
+
+    # Encrypt and decrypt the files
+    for dir_name, subdir_list, file_list in os.walk(local_directory, topdown=True):
+        if dir_name != local_directory:
+            for fname in file_list:
+                file_path = os.path.join(dir_name, fname)
+
+                # Encrypt the file
+                encrypted_file_path = encrypt_file(file_path, key_id)
+
+                # Decrypt the encrypted file
+                decrypt_file(encrypted_file_path)
+
+if __name__ == "__main__":
+    main()
+```
+
+#### Results
+Files are downloaded from the S3 bucket, encrypted and decrypted using the KMS key I created (and updated the key policy) in Step 1 and 2.
+![alt text](image-21.png)
+The encrypted file:
+![alt text](image-22.png)
+The decrypted file:
+![alt text](image-23.png)
 
 ### [5] Apply pycryptodome for encryption/decryption
 
+#### 5.1 Install `pycryptodome`
+I first installed the library `pycryptodome` by using command `pip install pycryptodome`.
+
+##### Commands
+- `pip`: Pip is the Python package installer. It's used to install, update, or uninstall Python packages.
+- `install`: This command tells pip to install a specific package.
+- `pycryptodome`: The name of the Python package that provides cryptographic functionalities (e.g., encryption, decryption, hashing).
+
+##### Results
+```bash
+Defaulting to user installation because normal site-packages is not writeable
+Collecting pycryptodome
+  Downloading pycryptodome-3.20.0-cp35-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 6.1 MB/s eta 0:00:00
+Installing collected packages: pycryptodome
+Successfully installed pycryptodome-3.20.0
+```
+
+#### 5.2 Encrypt and decrypt using Python script 
+I adapted the Python script provided in the Lab4 instruction. I downloaded files from the S3 bucket, encrypted and decrypted them using `pycryptodome`.
+
+##### Python script `pycryptodome.py`
+```python
+# Reference: https://github.com/zhangzhics/CITS5503_Sem2/blob/master/Labs/src/fileencrypt.py
+import os, random, struct
+from Crypto.Cipher import AES
+from Crypto import Random
+import boto3
+import base64
+import hashlib
+
+BLOCK_SIZE = 16
+CHUNK_SIZE = 64 * 1024
+
+s3 = boto3.client('s3')
+
+bucket_name = '22756463-cloudstorage'  # S3 bucket name
+local_directory = './restored_files1'  # Local directory to store files obtained from cloud
+
+
+# Download files from S3 bucket to local directory
+def download_s3_files(bucket_name, local_directory):
+    if not os.path.exists(local_directory):
+        os.makedirs(local_directory)
+
+    # List files in the S3 bucket
+    objects = s3.list_objects_v2(Bucket=bucket_name)
+
+    if 'Contents' in objects:
+        for obj in objects['Contents']:
+            file_key = obj['Key']
+            file_path = os.path.join(local_directory, file_key)
+
+            # Create subdirectories if necessary
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+            # Download the file from S3 to local directory
+            s3.download_file(bucket_name, file_key, file_path)
+            print(f"Downloaded {file_key} to {file_path}")
+    else:
+        print("No files found in the S3 bucket.")
+
+
+def encrypt_file(password, in_filename, out_filename):
+
+    key = hashlib.sha256(password.encode("utf-8")).digest()
+
+    iv = Random.new().read(AES.block_size)
+    encryptor = AES.new(key, AES.MODE_CBC, iv)
+    filesize = os.path.getsize(in_filename)
+
+    with open(in_filename, 'rb') as infile:
+        with open(out_filename, 'wb') as outfile:
+            outfile.write(struct.pack('<Q', filesize))
+            outfile.write(iv)
+
+            while True:
+                chunk = infile.read(CHUNK_SIZE)
+                if len(chunk) == 0:
+                    break
+                elif len(chunk) % 16 != 0:
+                    chunk += ' '.encode("utf-8") * (16 - len(chunk) % 16)
+
+                outfile.write(encryptor.encrypt(chunk))
+
+
+def decrypt_file(password, in_filename, out_filename):
+
+    key = hashlib.sha256(password.encode("utf-8")).digest()
+
+    with open(in_filename, 'rb') as infile:
+        origsize = struct.unpack('<Q', infile.read(struct.calcsize('Q')))[0]
+        iv = infile.read(16)
+        decryptor = AES.new(key, AES.MODE_CBC, iv)
+
+        with open(out_filename, 'wb') as outfile:
+            while True:
+                chunk = infile.read(CHUNK_SIZE)
+                if len(chunk) == 0:
+                    break
+                outfile.write(decryptor.decrypt(chunk))
+
+            outfile.truncate(origsize)
+
+
+# Main program
+password = 'cat is cuteee'
+
+# Download the files from the S3 bucket
+download_s3_files(bucket_name, local_directory)
+
+# Encrypt and decrypt the files
+for dir_name, subdir_list, file_list in os.walk(local_directory, topdown=True):
+    if dir_name != local_directory:
+        for fname in file_list:
+            print(fname)
+            file_path = os.path.join(dir_name, fname)
+
+            # Encrypt the file
+            encrypt_file(password, file_path, out_filename=f"{file_path}.enc")
+
+            # Decrypt the encrypted file
+            decrypt_file(password, f"{file_path}.enc", out_filename=f"{file_path}.dec")
+```
+
+##### Results
+Files were downloaded from the S3 bucket, encrypted and decrypted using the `pycryptodome`.
+![alt text](image-24.png)
+The encrypted file:
+![alt text](image-25.png)
+The decrypted file:
+![alt text](image-26.png)
 
 ## Answer the following question
 
@@ -1003,9 +1359,35 @@ What is the performance difference between using KMS and using the custom soluti
 
 ### Answer:
 
+- Latency: Using KMS involves network communication with the AWS service and thus the latency can be higher than the custom solution which operates locally and requires no network. 
+- Ease of use: Using KMS is easier because AWS handles the key storage and mangement, whereas in the custom solution we need to manage the key (password) ourselves, and the code implementation is more complicated.
+- Security: Using KMS is more secure because the AWS modules handle encryption automatically, whereas in the custom solution requires us to define the password ourselves and if it is chosen unwisely, the encryption is less secure.
+- Cost: Using KMS can be more costly because it is charged based on the number of encryption and decryption requests, whereas the custom solution requires no recurring costs each encryption or decryption operation.
+
 
 
 <div style="page-break-after: always;"></div>
 
 # Lab 5
+
+## Application Load Balancer
+
+### [1] Create 2 EC2 instances
+
+#### Python script `create_instances.py`
+
+
+#### Results
+
+### [2] Create an Application Load Balancer
+
+#### Commands
+
+#### Results
+
+### [3] Test the Application Load Balancer
+
+#### Commands
+
+#### Results
 
