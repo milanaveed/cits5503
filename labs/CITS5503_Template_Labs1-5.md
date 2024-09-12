@@ -1509,7 +1509,10 @@ Two instances created with instance ID: `i-0df492e7c87095ebb` and `i-053b8aa5242
 
 ### [2] Create an Application Load Balancer
 
-#### Commands
+#### Python script `create_alb.py`
+```python
+
+```
 
 #### Results
 
