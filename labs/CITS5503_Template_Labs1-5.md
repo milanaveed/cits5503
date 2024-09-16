@@ -1125,8 +1125,8 @@ The key policy is attached to the KMS key.
 
 #### Results
 The script worked. My username is the key administrator and key user.
-![alt text](image-20.png)
-![alt text](image-19.png)
+![alt text](image-40.png)
+![alt text](image-41.png)
 
 ### [4] Use the created KMS key for encryption/decryption
 I used the following Python script to download files from the S3 bucket, then encrypt and decrpt them. I saved the encrypted and decrypted files in the same folder as the original files.
