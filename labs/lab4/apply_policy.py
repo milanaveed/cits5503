@@ -15,7 +15,7 @@ bucket_policy = {
         "Effect": "Deny",
         "Principal": "*",
         "Action": "s3:*",
-        "Resource": f"arn:aws:s3:::{bucket_name}/folder1/folder2/*",
+        "Resource": f"arn:aws:s3:::{bucket_name}",
         "Condition": {
             "StringNotLike": {
                 "aws:username": f"{student_number}@student.uwa.edu.au"

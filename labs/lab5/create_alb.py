@@ -94,7 +94,20 @@ def create_instances(key_name, security_group_name, ami_id, availability_zones, 
             print(f"Error creating EC2 instance: {e}")
     return instance_ids
 
-# Step 6: Create the load balancer
+# Step 6: Get the available subnets in your region
+def get_subnets():
+    subnets_response = ec2.describe_subnets()
+    subnets = subnets_response['Subnets']
+    
+    # Filter subnets to only include those that are in available state
+    available_subnets = [subnet for subnet in subnets if subnet['State'] == 'available']
+    
+    if len(available_subnets) < 2:
+        raise Exception('Less than 2 available subnets in this region.')
+    
+    return available_subnets
+
+# Step 7: Create the load balancer
 def create_load_balancer(sg_id, subnets):
     try:
         response = elbv2.create_load_balancer(
@@ -112,7 +125,7 @@ def create_load_balancer(sg_id, subnets):
         print(f"Error creating load balancer: {e}")
         return None
 
-# Step 7: Create a target group
+# Step 8: Create a target group
 def create_target_group(vpc_id):
     try:
         response = elbv2.create_target_group(
@@ -131,7 +144,7 @@ def create_target_group(vpc_id):
         print(f"Error creating target group: {e}")
         return None
 
-# Step 8: Register targets (EC2 instances) to the target group
+# Step 9: Register targets (EC2 instances) to the target group
 def register_targets(target_group_arn, instance_ids):
     try:
         targets = [{'Id': instance_id} for instance_id in instance_ids]
@@ -143,7 +156,7 @@ def register_targets(target_group_arn, instance_ids):
     except ClientError as e:
         print(f"Error registering targets: {e}")
 
-# Step 9: Create a listener to forward traffic to the target group
+# Step 10: Create a listener to forward traffic to the target group
 def create_listener(lb_arn, target_group_arn):
     try:
         elbv2.create_listener(
@@ -186,8 +199,9 @@ def main():
     vpc_id = vpcs['Vpcs'][0]['VpcId']
     
     # Step 7: Create an Application Load Balancer (ALB)
-    subnets = [availability_zones[0]['SubnetId'], availability_zones[1]['SubnetId']]
-    lb_arn = create_load_balancer(sg_id, subnets)
+    subnets = get_subnets()
+    subnet_ids = [subnets[0]['SubnetId'], subnets[1]['SubnetId']]
+    lb_arn = create_load_balancer(sg_id, subnet_ids)
 
     # Step 8: Create a target group in the same VPC
     target_group_arn = create_target_group(vpc_id)

@@ -912,7 +912,7 @@ bucket_policy = {
         "Effect": "Deny",
         "Principal": "*",
         "Action": "s3:*",
-        "Resource": f"arn:aws:s3:::{bucket_name}/folder1/folder2/*",
+        "Resource": f"arn:aws:s3:::{bucket_name}",
         "Condition": {
             "StringNotLike": {
                 "aws:username": f"{student_number}@student.uwa.edu.au"
@@ -942,11 +942,21 @@ if __name__ == "__main__":
 Policy applied to the S3 bucket.
 
 ### [2] Check whether the script works
-I checked the effect of the script by asking someone else to access the folder called `rootdir` in the S3 bucket I created.
+I displayed the policy content applied to the S3 bucket by using AWS CLI command and AWS S3 console.
+Then I checked the effect of the script by asking someone else to access the folder called `rootdir` in the S3 bucket I created.
 
 #### Results
+Output from the AWS CLI using my account:
+![alt text](image-32.png)
 
-TODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODOTODO
+Output from the AWS S3 console using my account:
+![alt text](image-35.png)
+
+Output from the AWS S3 console using someone else's account:
+![alt text](image-33.png)
+
+Output form the AWS CLI using someone else's account:
+![alt text](image-34.png)
 
 ## AES Encryption using KMS
 ### [1] Create a KMS key
