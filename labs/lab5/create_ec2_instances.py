@@ -120,3 +120,6 @@ def main():
 
     # Step 5: Create two instances in different availability zones
     create_instances(key_name, sg_name, ami_id, availability_zones, student_number)
+
+if __name__ == "__main__":
+    main()
