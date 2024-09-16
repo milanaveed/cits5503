@@ -107,11 +107,11 @@ def get_subnets():
     
     return available_subnets
 
-# Step 7: Create the load balancer
+# Step 7: Create the network load balancer
 def create_load_balancer(sg_id, subnets):
     try:
         response = elbv2.create_load_balancer(
-            Name='my-load-balancer',
+            Name='22756463-load-balancer',
             Subnets=subnets,
             SecurityGroups=[sg_id],
             Scheme='internet-facing',
@@ -129,7 +129,7 @@ def create_load_balancer(sg_id, subnets):
 def create_target_group(vpc_id):
     try:
         response = elbv2.create_target_group(
-            Name='my-target-group',
+            Name='22756463-target-group',
             Protocol='HTTP',
             Port=80,
             VpcId=vpc_id,
@@ -214,3 +214,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+

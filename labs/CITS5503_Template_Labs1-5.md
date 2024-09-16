@@ -1511,6 +1511,9 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+- elbv2.create_load_balancer(): Creates a new Network Load Balancer.
+- elbv2.create_target_group(): Creates a target group, which is a logical grouping of EC2 instances or IP addresses to which the load balancer directs traffic.
+
 
 #### Results
 Two instances created with instance ID: `i-0df492e7c87095ebb` and `i-053b8aa52423825dbas` as follows.
