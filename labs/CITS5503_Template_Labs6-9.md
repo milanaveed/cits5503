@@ -1,11 +1,13 @@
-﻿<div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh;">
+﻿<div style="text-align: center;">
 
-  <h2>Labs 6-9</h2>
+  <h1>Labs 6-9</h1>
   
-  <p>Student ID: [Student ID]</p>
-  <p>Student Name: [First and Surname]</p>
+  <p>Student ID: 22756463</p>
+  <p>Student Name: Mila (Yue) Zhang</p>
 
 </div>
+
+<div style="page-break-after: always;"></div>
 
 # Lab 6
 
