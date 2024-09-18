@@ -539,6 +539,10 @@ if __name__ == "__main__":
 ```
 
 
+#### Results
+After navigating to "EC2 > Target Groups" on AWS console, I confirmed that the Health check path is set to `/polls/`, and the Health check interval is set to `30 seconds`.
+![alt text](image-59.png)
+
 
 ### [3] Access
 I run the Django application again by using the command `python3 manage.py runserver 8000`.
