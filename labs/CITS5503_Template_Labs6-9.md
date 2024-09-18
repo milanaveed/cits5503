@@ -238,31 +238,65 @@ I installed the Nginx web server on Ubuntu by using the command `apt install ngi
 Installed Nginx.
 
 ### [7] Configure nginx
+I edited the `/etc/nginx/sites-enabled/default` by using the command `nano /etc/nginx/sites-enabled/default`.
 
+#### Commands
+- `nano`: The text editor I am using.
+- `/etc/nginx/sites-enabled/default`: The full path to the Nginx configuration file I want to edit.
 
+#### Results
+Replaced the file content:
+![alt text](image-52.png)
 
 
 ### [8] Restart nginx
+I restarted the Nginx web server on my system by using the command `service nginx restart`. Restarting Nginx is necessary after making configuration changes (such as editing the /etc/nginx/sites-enabled/default file) to apply those changes.
 
-[Refer to the marking rubrics for sufficient step-by-step description.]
+#### Commands
+- `service`: This is the command used to manage system services (like starting, stopping, or restarting services) in many Linux distributions.
+- `nginx`: This is the name of the service I am interacting with, which in this case is the Nginx web server.
+- `restart`: This tells the system to stop and then start the Nginx service again, applying any new configurations.
+
+#### Results
+Restarted the Nginx web server.
 
 ### [9] Access your EC2 instance
+I started the Django development server on port 8000 by using the command `python3 manage.py runserver 8000`. This is typically done during development to test the Django application locally. Then I opened the browser and entered the IP address (http://54.152.128.37/) of my EC2 instance.
 
-[Refer to the marking rubrics for sufficient step-by-step description.]
+#### Commands
+- `python3`: This runs the Python 3 interpreter.
+- `manage.py`: This is a Django utility script automatically generated when creating a Django project. It is used to perform various administrative tasks for the project, such as running the development server, creating migrations, or managing the database.
+- `runserver`: This is the command that starts the Django development web server. By default, Django runs the server on port 8000, but we can specify a different port if needed.
+- `8000`: This specifies the port number on which the server will listen.
+
+#### Results
+The server run as follows.
+![alt text](image-53.png)
 
 ## Set up Django inside the created EC2 instance
 
 ### [1] Edit the following files (create them if not exist)
+I edited files `polls/views.py`, `polls/urls.py` and `lab/urls.py` by using the command `nano`.
 
-[Refer to the marking rubrics for sufficient step-by-step description.]
+#### Commands
+- `nano`: The text editor commonly used in Linux.
+
+#### Results
+I replaced content in those files with those provided in the lab description.
+![alt text](image-55.png)
+![alt text](image-56.png)
+![alt text](image-57.png)
 
 ### [2] Run the web server again
 
 [Refer to the marking rubrics for sufficient step-by-step description.]
 
 ### [3] Access the EC2 instance
+I accessed the EC2 instance by opening the URL `http://54.152.128.37/polls/` in a browser.
 
-[Refer to the marking rubrics for sufficient step-by-step description.]
+#### Results
+(Zoomed in)
+![alt text](image-54.png)
 
 ## Set up an ALB
 
