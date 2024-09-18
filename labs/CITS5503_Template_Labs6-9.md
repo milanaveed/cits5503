@@ -288,8 +288,18 @@ I replaced content in those files with those provided in the lab description.
 ![alt text](image-57.png)
 
 ### [2] Run the web server again
+I started the Django development server on port 8000 again by using the command `python3 manage.py runserver 8000`. This is typically done during development to test the Django application locally. 
 
-TODO
+#### Commands
+- `python3`: This runs the Python 3 interpreter.
+- `manage.py`: This is a Django utility script automatically generated when creating a Django project. It is used to perform various administrative tasks for the project, such as running the development server, creating migrations, or managing the database.
+- `runserver`: This is the command that starts the Django development web server. By default, Django runs the server on port 8000, but we can specify a different port if needed.
+- `8000`: This specifies the port number on which the server will listen.
+
+#### Results
+The server run as follows.
+![alt text](image-53.png)
+
 
 ### [3] Access the EC2 instance
 I accessed the EC2 instance by opening the URL `http://54.152.128.37/polls/` in a browser.
@@ -301,6 +311,7 @@ I accessed the EC2 instance by opening the URL `http://54.152.128.37/polls/` in 
 ## Set up an ALB
 
 ### [1] Create an application load balancer
+I created an application load balancer for the EC2 instance using the below Python script. I specified the region and subnet where my EC2 instance resided. Next, I created a listener for the Application Load Balancer with the default rule using Protocol: HTTP and Port 80 forwarding. I then chose the security group that allowed HTTP traffic on port 80. Finally, I added my EC2 instance as a registered target within the target group, enabling the load balancer to forward traffic to it.
 
 #### Python script
 ```python
@@ -308,236 +319,265 @@ import boto3
 from botocore.exceptions import ClientError
 
 # Create a Boto3 EC2 and ELBv2 client
+# ec2 client is used for interacting with EC2 instances and subnets
+# elbv2 client is used for interacting with Application Load Balancer (ALB) and Target Groups
 ec2 = boto3.client('ec2')
 elbv2 = boto3.client('elbv2')
 
+# Function to get available subnets in the region
 def get_subnets():
+    # Describe subnets in the EC2 environment
     subnets_response = ec2.describe_subnets()
     subnets = subnets_response['Subnets']
     
-    # Filter subnets to only include those that are in available state
+    # Filter subnets to only include those that are in the 'available' state
     available_subnets = [subnet for subnet in subnets if subnet['State'] == 'available']
     
+    # If fewer than 2 available subnets are found, raise an exception
     if len(available_subnets) < 2:
         raise Exception('Less than 2 available subnets in this region.')
     
     return available_subnets
 
+# Function to create an Application Load Balancer (ALB)
 def create_load_balancer(sg_id, subnets):
     try:
+        # Create the load balancer with the given security group and subnets
         response = elbv2.create_load_balancer(
-            Name='22756463-load-balancer1',
-            Subnets=subnets,
-            SecurityGroups=[sg_id],
-            Scheme='internet-facing',
-            Type='application',
-            IpAddressType='ipv4'
+            Name='22756463-load-balancer1',  # The name of the load balancer
+            Subnets=subnets,  # Subnets where the load balancer will reside
+            SecurityGroups=[sg_id],  # Security group to apply
+            Scheme='internet-facing',  # Public-facing ALB
+            Type='application',  # Application Load Balancer (ALB)
+            IpAddressType='ipv4'  # Use IPv4
         )
-        lb_arn = response['LoadBalancers'][0]['LoadBalancerArn']
+        lb_arn = response['LoadBalancers'][0]['LoadBalancerArn']  # ARN (Amazon Resource Name) of the created LB
         print(f"Load Balancer created with ARN: {lb_arn}")
-        return lb_arn
+        return lb_arn  # Return the ARN of the load balancer
     except ClientError as e:
-        print(f"Error creating load balancer: {e}")
+        print(f"Error creating load balancer: {e}")  # Catch and print errors if any
         return None
 
-
+# Function to create a Target Group
 def create_target_group(vpc_id):
     try:
+        # Create a target group in the specified VPC
         response = elbv2.create_target_group(
-            Name='22756463-target-group1',
-            Protocol='HTTP',
-            Port=80,
-            VpcId=vpc_id,
-            HealthCheckProtocol='HTTP',
-            HealthCheckPort='80',
-            TargetType='instance'
+            Name='22756463-target-group1',  # Name of the target group
+            Protocol='HTTP',  # Protocol to use (HTTP)
+            Port=80,  # Port to forward traffic (port 80)
+            VpcId=vpc_id,  # VPC ID where the target group resides
+            HealthCheckProtocol='HTTP',  # Health check using HTTP
+            HealthCheckPort='80',  # Port to use for health checks (port 80)
+            TargetType='instance'  # Target type is EC2 instances
         )
-        target_group_arn = response['TargetGroups'][0]['TargetGroupArn']
+        target_group_arn = response['TargetGroups'][0]['TargetGroupArn']  # ARN of the created target group
         print(f"Target group created with ARN: {target_group_arn}")
-        return target_group_arn
+        return target_group_arn  # Return the ARN of the target group
     except ClientError as e:
-        print(f"Error creating target group: {e}")
+        print(f"Error creating target group: {e}")  # Catch and print errors if any
         return None
 
-
+# Function to register EC2 instances with the target group
 def register_targets(target_group_arn, instance_ids):
     try:
+        # Prepare the list of instance IDs as target objects
         targets = [{'Id': instance_id} for instance_id in instance_ids]
+        # Register the EC2 instances as targets for the target group
         elbv2.register_targets(
-            TargetGroupArn=target_group_arn,
-            Targets=targets
+            TargetGroupArn=target_group_arn,  # The ARN of the target group
+            Targets=targets  # EC2 instances to register
         )
-        print(f"Registered instances {instance_ids} to the target group.")
+        print(f"Registered instances {instance_ids} to the target group.")  # Print confirmation
     except ClientError as e:
-        print(f"Error registering targets: {e}")
+        print(f"Error registering targets: {e}")  # Catch and print errors if any
 
-
+# Function to create a listener for the load balancer
 def create_listener(lb_arn, target_group_arn):
     try:
+        # Create a listener for the load balancer to forward HTTP traffic to the target group
         elbv2.create_listener(
-            LoadBalancerArn=lb_arn,
-            Protocol='HTTP',
-            Port=80,
+            LoadBalancerArn=lb_arn,  # ARN of the load balancer
+            Protocol='HTTP',  # Protocol to use (HTTP)
+            Port=80,  # Port to listen on (port 80)
             DefaultActions=[{
                 'Type': 'forward',
-                'TargetGroupArn': target_group_arn
+                'TargetGroupArn': target_group_arn  # Forward traffic to the target group
             }]
         )
-        print(f"Listener created for Load Balancer {lb_arn}")
+        print(f"Listener created for Load Balancer {lb_arn}")  # Print confirmation
     except ClientError as e:
-        print(f"Error creating listener: {e}")
+        print(f"Error creating listener: {e}")  # Catch and print errors if any
 
-
+# Main function to coordinate the creation of the ALB and associated resources
 def main():
-    sg_name = "22756463-sg"
-    sg_description = "security group for development environment"
-    student_number = '22756463'
-    ami_id = 'ami-0a0e5d9c7acc336f1'
-    key_name = "22756463-key"
+    instance_id = ['i-01b55b25eb0b60503']  # List of EC2 instance IDs to register in the target group
+    sg_id = 'sg-045eebb087d4f0e9f'  # Security group ID
 
-    instance_id = ['i-01b55b25eb0b60503']
-    sg_id = 'sg-045eebb087d4f0e9f'
-
-
+    # Get VPC information (first available VPC)
     vpcs = ec2.describe_vpcs()
-    vpc_id = vpcs['Vpcs'][0]['VpcId']
+    vpc_id = vpcs['Vpcs'][0]['VpcId']  # Extract the VPC ID
     
-
+    # Get subnets in the VPC
     subnets = get_subnets()
-    subnet_id = [subnets[0]['SubnetId'], subnets[1]['SubnetId']]
+    subnet_id = [subnets[0]['SubnetId'], subnets[1]['SubnetId']]  # Select two available subnets
+    
+    # Create the Application Load Balancer
     lb_arn = create_load_balancer(sg_id, subnet_id)
 
+    # Create a target group within the VPC
     target_group_arn = create_target_group(vpc_id)
 
+    # Register the EC2 instance to the target group
     register_targets(target_group_arn, instance_id)
 
-
+    # Create a listener for the load balancer to forward traffic to the target group
     create_listener(lb_arn, target_group_arn)
 
+# Entry point for the script
 if __name__ == "__main__":
     main()
 ```
+A detailed explanation is provided as comments in the code block above.
 
-
+#### Results
+Created an application load balancer. (As shown in Step 2 Health check)
 
 ### [2] Health check
-
+I updated the above code in Step 1 to add a health check for the target group. I specified `/polls/` as the path for the health check in the target group configuration. I then confirmed that the health check was fetching the `/polls/` page every 30 seconds as expected using AWS Console.
 
 #### Python script 
 ```python
 import boto3
 from botocore.exceptions import ClientError
 
-# Create a Boto3 EC2 and ELBv2 client
-ec2 = boto3.client('ec2')
-elbv2 = boto3.client('elbv2')
+# Create a Boto3 EC2 and ELBv2 client to interact with AWS services
+ec2 = boto3.client('ec2')  # EC2 client to handle EC2 and VPC-related operations
+elbv2 = boto3.client('elbv2')  # ELBv2 client to manage load balancers and target groups
 
+# Function to retrieve available subnets in the region
 def get_subnets():
+    # Fetch the details of all subnets in the current region
     subnets_response = ec2.describe_subnets()
     subnets = subnets_response['Subnets']
     
-    # Filter subnets to only include those that are in available state
+    # Filter only subnets that are in the 'available' state
     available_subnets = [subnet for subnet in subnets if subnet['State'] == 'available']
     
+    # Ensure that there are at least 2 available subnets
     if len(available_subnets) < 2:
         raise Exception('Less than 2 available subnets in this region.')
     
-    return available_subnets
+    return available_subnets  # Return the list of available subnets
 
+# Function to create a new Application Load Balancer (ALB)
 def create_load_balancer(sg_id, subnets):
     try:
+        # Create the load balancer with specified security groups and subnets
         response = elbv2.create_load_balancer(
-            Name='22756463-load-balancer3',
-            Subnets=subnets,
-            SecurityGroups=[sg_id],
-            Scheme='internet-facing',
-            Type='application',
-            IpAddressType='ipv4'
+            Name='22756463-load-balancer3',  # Name of the load balancer
+            Subnets=subnets,  # List of subnet IDs
+            SecurityGroups=[sg_id],  # Security group for the load balancer
+            Scheme='internet-facing',  # Internet-facing load balancer
+            Type='application',  # Type is 'application' (ALB)
+            IpAddressType='ipv4'  # Use IPv4 for IP addressing
         )
+        # Get the Load Balancer ARN from the response
         lb_arn = response['LoadBalancers'][0]['LoadBalancerArn']
-        print(f"Load Balancer created with ARN: {lb_arn}")
-        return lb_arn
+        print(f"Load Balancer created with ARN: {lb_arn}")  # Print the ARN
+        return lb_arn  # Return the ARN of the created load balancer
     except ClientError as e:
-        print(f"Error creating load balancer: {e}")
-        return None
+        print(f"Error creating load balancer: {e}")  # Print error message in case of failure
+        return None  # Return None if creation fails
 
-
+# Function to create a target group within a VPC
 def create_target_group(vpc_id):
     try:
+        # Create a target group for the load balancer, with HTTP health check on /polls/
         response = elbv2.create_target_group(
-            Name='22756463-target-group3',
-            Protocol='HTTP',
-            Port=80,
-            VpcId=vpc_id,
-            HealthCheckProtocol='HTTP',
-            HealthCheckPort='80',
-            HealthCheckPath='/polls/',  # Specify the /polls/ path for health checks
+            Name='22756463-target-group3',  # Name of the target group
+            Protocol='HTTP',  # The protocol to use (HTTP)
+            Port=80,  # Port number to listen on
+            VpcId=vpc_id,  # VPC ID where the target group resides
+            HealthCheckProtocol='HTTP',  # Protocol for health checks
+            HealthCheckPort='80',  # Port for health check (HTTP)
+            HealthCheckPath='/polls/',  # Health check path (/polls/)
             HealthCheckIntervalSeconds=30,  # Health check interval set to 30 seconds
-            HealthCheckTimeoutSeconds=5,  # Timeout for each health check (optional)
-            HealthyThresholdCount=2,  # Number of consecutive successes to be considered healthy
-            UnhealthyThresholdCount=2,  # Number of consecutive failures to be considered unhealthy
-            TargetType='instance'
+            HealthCheckTimeoutSeconds=5,  # Timeout for health check requests
+            HealthyThresholdCount=2,  # Threshold for marking instance as healthy
+            UnhealthyThresholdCount=2,  # Threshold for marking instance as unhealthy
+            TargetType='instance'  # Target type is EC2 instances
         )
+        # Get the ARN of the created target group
         target_group_arn = response['TargetGroups'][0]['TargetGroupArn']
-        print(f"Target group created with ARN: {target_group_arn}")
-        return target_group_arn
+        print(f"Target group created with ARN: {target_group_arn}")  # Print the ARN of the target group
+        return target_group_arn  # Return the target group ARN
     except ClientError as e:
-        print(f"Error creating target group: {e}")
-        return None
+        print(f"Error creating target group: {e}")  # Print error message if creation fails
+        return None  # Return None if creation fails
 
-
+# Function to register EC2 instances with the target group
 def register_targets(target_group_arn, instance_ids):
     try:
+        # Prepare the list of targets (EC2 instances) to register
         targets = [{'Id': instance_id} for instance_id in instance_ids]
+        # Register the targets with the specified target group
         elbv2.register_targets(
-            TargetGroupArn=target_group_arn,
-            Targets=targets
+            TargetGroupArn=target_group_arn,  # Target group ARN
+            Targets=targets  # List of instances to register
         )
-        print(f"Registered instances {instance_ids} to the target group.")
+        print(f"Registered instances {instance_ids} to the target group.")  # Print confirmation message
     except ClientError as e:
-        print(f"Error registering targets: {e}")
+        print(f"Error registering targets: {e}")  # Print error message if registration fails
 
-
+# Function to create a listener for the load balancer
 def create_listener(lb_arn, target_group_arn):
     try:
+        # Create an HTTP listener that forwards traffic to the target group
         elbv2.create_listener(
-            LoadBalancerArn=lb_arn,
-            Protocol='HTTP',
-            Port=80,
+            LoadBalancerArn=lb_arn,  # Load Balancer ARN
+            Protocol='HTTP',  # Protocol to listen for (HTTP)
+            Port=80,  # Port to listen on (80)
             DefaultActions=[{
                 'Type': 'forward',
-                'TargetGroupArn': target_group_arn
+                'TargetGroupArn': target_group_arn  # Forward traffic to the target group
             }]
         )
-        print(f"Listener created for Load Balancer {lb_arn}")
+        print(f"Listener created for Load Balancer {lb_arn}")  # Print confirmation message
     except ClientError as e:
-        print(f"Error creating listener: {e}")
+        print(f"Error creating listener: {e}")  # Print error message if creation fails
 
-
+# Main function to handle the creation of load balancer, target group, and registration of instances
 def main():
-    instance_id = ['i-01b55b25eb0b60503']
-    sg_id = 'sg-045eebb087d4f0e9f'
+    instance_id = ['i-01b55b25eb0b60503']  # List of EC2 instance IDs to register in the target group
+    sg_id = 'sg-045eebb087d4f0e9f'  # Security group ID for the load balancer
 
-
+    # Describe VPCs and get the first available VPC ID
     vpcs = ec2.describe_vpcs()
-    vpc_id = vpcs['Vpcs'][0]['VpcId']
+    vpc_id = vpcs['Vpcs'][0]['VpcId']  # Extract the VPC ID
     
-
+    # Get available subnets in the VPC
     subnets = get_subnets()
+    # Select two subnets to use for the load balancer
     subnet_id = [subnets[0]['SubnetId'], subnets[1]['SubnetId']]
+    
+    # Create the Application Load Balancer (ALB)
     lb_arn = create_load_balancer(sg_id, subnet_id)
 
+    # Create a target group within the VPC
     target_group_arn = create_target_group(vpc_id)
 
+    # Register the EC2 instance with the target group
     register_targets(target_group_arn, instance_id)
 
-
+    # Create a listener for the load balancer to forward traffic to the target group
     create_listener(lb_arn, target_group_arn)
 
+# Entry point of the script
 if __name__ == "__main__":
-    main()
+    main()  # Execute the main function
 ```
-
+A detailed explanation is provided as comments in the code block above.
 
 #### Results
 After navigating to "EC2 > Target Groups" on AWS console, I confirmed that the Health check path is set to `/polls/`, and the Health check interval is set to `30 seconds`.
@@ -545,9 +585,13 @@ After navigating to "EC2 > Target Groups" on AWS console, I confirmed that the H
 
 
 ### [3] Access
-I run the Django application again by using the command `python3 manage.py runserver 8000`.
+I run the Django application again by using the command `python3 manage.py runserver 8000`. Then I opened the browser and and the polls page (http://54.152.128.37/polls/) of my EC2 instance.
 
-
+#### Commands
+- `python3`: This runs the Python 3 interpreter.
+- `manage.py`: This is a Django utility script automatically generated when creating a Django project. It is used to perform various *administrative tasks* for the project, such as running the development server, creating migrations, or managing the database.
+- `runserver`: This is the command that starts the Django development web server. By default, Django runs the server on port 8000, but we can specify a different port if needed.
+- `8000`: This specifies the port number on which the server will listen.
 
 #### Results
 (After zoomed in)
