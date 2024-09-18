@@ -227,11 +227,20 @@ lab/                     # Main project directory
 ```
 
 ### [6] Install nginx
+I installed the Nginx web server on Ubuntu by using the command `apt install nginx`. Nginx is a powerful, open-source HTTP and reverse proxy server, known for its high performance and low resource usage.
 
+#### Commands
+- `apt`: The package management command used in Ubuntu for installing, updating, and removing software.
+- `install`: This option tells apt to install the specified package.
+- `nginx`: The name of the package I want to install, which in this case is the Nginx web server.
+
+#### Results
+Installed Nginx.
 
 ### [7] Configure nginx
 
-[Refer to the marking rubrics for sufficient step-by-step description.]
+
+
 
 ### [8] Restart nginx
 
