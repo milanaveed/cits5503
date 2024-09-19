@@ -441,7 +441,8 @@ if __name__ == "__main__":
 A detailed explanation is provided as comments in the code block above.
 
 #### Results
-Created an application load balancer. (As shown in Step 2 Health check)
+Created an application load balancer. (I forgot to make a screenshot initially, so I created another one named "22756463-load-balancer4")
+![alt text](image-60.png)
 
 ### [2] Health check
 I updated the above code in Step 1 to add a health check for the target group. I specified `/polls/` as the path for the health check in the target group configuration. I then confirmed that the health check was fetching the `/polls/` page every 30 seconds as expected using AWS Console.
