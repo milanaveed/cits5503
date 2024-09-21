@@ -794,6 +794,8 @@ Connected to the EC2 instance.
 ![alt text](image-64.png)
 
 ## Use Fabric for automation
+TODO: create the EC2 instance again.
+
 
 ### Python script
 

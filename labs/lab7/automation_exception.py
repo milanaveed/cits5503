@@ -101,7 +101,7 @@ def configure_nginx():
 def run_django():
     try:
         # Run Django development server in the background on port 8000
-        c.sudo('cd /opt/wwc/mysites/lab && source ../myenv/bin/activate && nohup python3 manage.py runserver 0.0.0.0:8000 &')
+        c.sudo('cd ~/opt/wwc/mysites/lab && source ../myenv/bin/activate && nohup python3 manage.py runserver 0.0.0.0:8000 &')
         print('Django development server running on port 8000.')
     except Exception as e:
         print(f"Error running Django server: {e}")
