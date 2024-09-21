@@ -598,10 +598,169 @@ I run the Django application again by using the command `python3 manage.py runse
 (After zoomed in)
 ![alt text](image-58.png)
 
+## [Unmarked] Web interface for CloudStorage application
+
+### [1] Create AWS DynamoDB table
+
+#### 1.1 Create S3 bucket and upload target directory content
+
+##### Python script `cloudstorage.py`
+```python
+import os
+import boto3
+import base64
+
+ROOT_DIR = '.'
+ROOT_S3_DIR = '22756463-cloudstorage'
+
+s3 = boto3.client("s3")
+
+bucket_region = 'us-east-1'
+
+bucket_config = {'LocationConstraint': bucket_region} 
+
+
+def upload_file(folder_name, file, file_name):
+    print("Uploading %s" % file)
+
+    try:
+        s3.upload_file(file, ROOT_S3_DIR, folder_name+file_name)
+    except Exception as error:
+        print(error)
+        pass
+
+try:
+    # Check if bucket exists
+    s3.head_bucket(Bucket=ROOT_S3_DIR)
+    print(f"Bucket {ROOT_S3_DIR} already exists.")
+except Exception as error:
+    # If bucket does not exist, create it
+    print(f"Creating bucket {ROOT_S3_DIR}...")
+    try:
+        if bucket_region == 'us-east-1':
+            # us-east-1 (N. Virginia) does not require LocationConstraint
+            s3.create_bucket(Bucket=ROOT_S3_DIR)
+        else:
+            response = s3.create_bucket(
+                Bucket=ROOT_S3_DIR,
+                CreateBucketConfiguration=bucket_config
+            )
+            print(f"Bucket {ROOT_S3_DIR} created successfully.")
+    except Exception as error:
+        print(f"Error creating bucket: {str(error)}")
+        raise
+
+
+# parse directory and upload files
+for dir_name, subdir_list, file_list in os.walk(ROOT_DIR, topdown=True):
+    if dir_name != ROOT_DIR:
+        for fname in file_list:
+            # Check if the file is visible (not starting with a dot)
+            if not fname.startswith('.'):
+                upload_file("%s/" % dir_name[2:], "%s/%s" % (dir_name, fname), fname)
+
+print("done")
+```
+
+##### Results
+S3 bucket created with the target content:
+![alt text](image-61.png)
+
+
+#### 1.2 Run DynamoDB local
+After I changed into the `dynamodb` directory in my Ubuntu environment, I run the DynamoDB local using the command `java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar –sharedDb`.
+
+##### Commands
+- `java`: This is the Java command that starts the Java runtime environment. It’s necessary because DynamoDB Local is a Java-based program.
+
+- `-Djava.library.path=./DynamoDBLocal_lib`: This argument specifies the path where the *necessary native libraries for DynamoDB Local* are located. In this case, ./DynamoDBLocal_lib refers to a directory in the current folder that contains the required libraries.
+
+- `-jar DynamoDBLocal.jar`: This tells Java to execute the DynamoDBLocal.jar file, which is the executable file for DynamoDB Local.
+
+- `–sharedDb`: This option tells DynamoDB Local to use a shared database file for all the tables, rather than creating separate databases for each access pattern or client. It simulates the single, global DynamoDB environment that you would have in AWS, allowing all clients and users to access the same tables and data.
+
+##### Results
+
+
 
 <div style="page-break-after: always;"></div>
 
 # Lab 7
+
+## Create an EC2 instance
+I created an EC2 instance using the following 
+
+### Python script `create_ec2_instance.py`
+```python
+import boto3
+from botocore.exceptions import ClientError
+
+# Create a Boto3 EC2 client
+ec2 = boto3.client('ec2')
+
+def create_instance(key_name, security_group_name, ami_id):
+    try:
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/client/run_instances.html
+        instance = ec2.run_instances(
+            ImageId= ami_id,
+            MinCount=1,
+            MaxCount=1,
+            InstanceType='t2.micro',
+            KeyName=key_name,
+            SecurityGroups=[security_group_name],
+            TagSpecifications=[
+                    {
+                        'ResourceType': 'instance',
+                        'Tags': [
+                            {'Key': 'Name', 'Value': f'22756463-vm'}
+                        ]
+                    }
+                ]
+        )
+        instance_id = instance['Instances'][0]['InstanceId']
+        print(f"EC2 instance created with Instance ID: {instance_id}")
+        return instance_id
+    except ClientError as e:
+        print(f"Error creating EC2 instance: {e}")
+        return None
+    
+def main():
+    sg_name = "22756463-sg"
+    sg_description = "security group for development environment"
+    key_name = "22756463-key"
+    ami_id = "ami-0a0e5d9c7acc336f1"
+    
+    # Create an EC2 instance
+    instance_id = create_instance(key_name, sg_name, ami_id)
+
+if __name__ == "__main__":
+    main()
+```
+
+### Results
+Created an EC2 instance with ID `i-0baeaff2e48250061`.
+![alt text](image-62.png)
+
+## Install and configure Fabric
+### [1] Install Fabric
+I used the command `pip install fabric` to install Fabric in my Linux environment. Fabric is a Python library and command-line tool for streamlining the use of SSH for application deployment or systems administration tasks.
+
+#### Commands
+- `pip`: The Python’s package installer, which allows me to install and manage software packages written in Python.
+- `install`: This is the specific command telling `pip` to install a package.
+- `fabric`: This is the name of the package we want to install. Fabric is a high-level Python library that simplifies tasks such as deployment, automation, and managing remote servers via SSH.
+
+#### Results
+Successfully installed Fabric.
+![alt text](image-63.png)
+
+
+## few
+## fewe
+
+
+
+
 
 <div style="page-break-after: always;"></div>
 
