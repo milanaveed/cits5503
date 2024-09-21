@@ -754,9 +754,50 @@ I used the command `pip install fabric` to install Fabric in my Linux environmen
 Successfully installed Fabric.
 ![alt text](image-63.png)
 
+### [2] Create a config file in `~/.ssh`
+I first changed into the directory by using command `cd ~/.ssh`. Then I created a config file by using the command `nano config`. 
 
-## few
-## fewe
+#### Commands
+- `cd`: This stands for "change directory." It is used to move into a different directory on the system.
+- `~/.ssh`: The `~` symbol refers to the home directory (e.g., /home/username/ on Linux). The .ssh directory is a hidden folder in the home directory where SSH-related files, such as private/public keys and configuration files, are stored.
+- `nano`: A text editor in Linux that opens files for editing in the terminal.
+- `config`: The name of the file we want to edit or create. In this case, `config` is the SSH configuration file that contains your connection settings for SSH connections. If the file doesn't exist, nano will create it.
+
+#### Content of `config`
+```
+Host 22756463-vm
+	Hostname ec2-3-87-135-215.compute-1.amazonaws.com
+	User ubuntu
+	UserKnownHostsFile /dev/null
+	StrictHostKeyChecking no
+	PasswordAuthentication no
+	IdentityFile ~/lab6/22756463-key.pem
+```
+
+#### Results
+Created the file `config`:
+![alt text](image-65.png)
+
+### [3] Connect to the instance
+I connected to the EC2 instance by activating the Python3 environment in my Linux environment. And then paste the following Python code line by line.
+
+#### Python script and explanation
+```python
+from fabric import Connection  # Import the Connection class from the fabric library for managing SSH connections
+c = Connection('22756463-vm')  # Establish an SSH connection to the machine named '22756463-vm'
+result = c.run('uname -s')  # Run the 'uname -s' command on the remote machine to get the operating system name
+```
+A detailed explanation is provided as comments above.
+
+#### Results
+Connected to the EC2 instance.
+![alt text](image-64.png)
+
+## Use Fabric for automation
+
+### Python script
+
+### Results
 
 
 
