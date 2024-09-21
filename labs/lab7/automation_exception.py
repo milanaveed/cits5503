@@ -1,42 +1,51 @@
-from fabric import Connection
-from fabric.transfer import Transfer
-import os
+from invoke import Responder
+from fabric import Connection, task
 
 # Establish SSH connection to the EC2 instance
 c = Connection('22756463-vm')  # Replace with your EC2 instance identifier or hostname
 
-def update_and_install():
+# Create a Responder to handle the sudo password prompt
+sudo_pass = Responder(
+    pattern=r'\[sudo\] password:',
+    response='your_password_here\n'  # Replace with your actual sudo password
+)
+
+@task
+def update_and_install(ctx):
     try:
         # Update the instance's package lists and install necessary packages
-        c.sudo('apt update -y')  # Update package list
-        c.sudo('apt upgrade -y')  # Upgrade packages
-        c.sudo('apt install -y python3-venv python3-pip nginx')  # Install Python virtual environment, pip, and Nginx
+        c.sudo('apt update -y', pty=True, watchers=[sudo_pass])  # Update package list
+        c.sudo('apt upgrade -y', pty=True, watchers=[sudo_pass])  # Upgrade packages
+        c.sudo('apt install -y python3-venv python3-pip nginx', pty=True, watchers=[sudo_pass])  # Install Python, pip, and Nginx
         print("Packages updated and installed successfully.")
     except Exception as e:
         print(f"Error during package installation: {e}")
 
-def create_project_directory():
+@task
+def create_project_directory(ctx):
     try:
         # Create a directory for the Django project
-        c.sudo('mkdir -p ~/opt/wwc/mysites')  # Create directory for the Django project
+        c.sudo('mkdir -p ~/opt/wwc/mysites', pty=True, watchers=[sudo_pass])  # Create directory for the Django project
         print("Project directory created.")
     except Exception as e:
         print(f"Error creating project directory: {e}")
 
-def setup_virtualenv_and_django():
+@task
+def setup_virtualenv_and_django(ctx):
     try:
         # Create a Python virtual environment and install Django
-        c.sudo('python3 -m venv myenv')  # Create virtual environment
-        c.sudo('source myenv/bin/activate && pip install django')  # Activate virtualenv and install Django
-        c.sudo('source myenv/bin/activate && django-admin startproject lab ~/opt/wwc/mysites/lab')  # Create Django project
+        c.sudo('python3 -m venv myenv', pty=True, watchers=[sudo_pass])  # Create virtual environment
+        c.sudo('source myenv/bin/activate && pip install django', pty=True, watchers=[sudo_pass])  # Activate virtualenv and install Django
+        c.sudo('source myenv/bin/activate && django-admin startproject lab ~/opt/wwc/mysites/lab', pty=True, watchers=[sudo_pass])  # Create Django project
 
         # Create the 'polls' app
-        c.sudo('cd ~/opt/wwc/mysites/lab && source ../myenv/bin/activate && python manage.py startapp polls')
+        c.sudo('cd ~/opt/wwc/mysites/lab && source ../myenv/bin/activate && python manage.py startapp polls', pty=True, watchers=[sudo_pass])
         print("Virtual environment and Django project set up successfully.")
     except Exception as e:
         print(f"Error setting up virtual environment and Django: {e}")
 
-def edit_django_files():
+@task
+def edit_django_files(ctx):
     try:
         # Edit polls/views.py
         polls_views = '''
@@ -45,7 +54,7 @@ from django.http import HttpResponse
 def index(request):
     return HttpResponse("Hello, world.")
     '''
-        c.sudo("echo '{}' > ~/opt/wwc/mysites/lab/polls/views.py".format(polls_views))
+        c.sudo("echo '{}' > ~/opt/wwc/mysites/lab/polls/views.py".format(polls_views), pty=True, watchers=[sudo_pass])
 
         # Edit polls/urls.py
         polls_urls = '''
@@ -56,7 +65,7 @@ urlpatterns = [
     path('', views.index, name='index'),
 ]
         '''
-        c.sudo("echo '{}' > ~/opt/wwc/mysites/lab/polls/urls.py".format(polls_urls))
+        c.sudo("echo '{}' > ~/opt/wwc/mysites/lab/polls/urls.py".format(polls_urls), pty=True, watchers=[sudo_pass])
 
         # Edit lab/urls.py (project-level urls.py)
         lab_urls = '''
@@ -68,15 +77,16 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 ]
         '''
-        c.sudo("echo '{}' > ~/opt/wwc/mysites/lab/lab/urls.py".format(lab_urls))
+        c.sudo("echo '{}' > ~/opt/wwc/mysites/lab/lab/urls.py".format(lab_urls), pty=True, watchers=[sudo_pass])
         print("Django files edited successfully.")
     except Exception as e:
         print(f"Error editing Django files: {e}")
 
-def configure_nginx():
+@task
+def configure_nginx(ctx):
     try:
         # Configure Nginx to proxy requests to the Django development server
-        c.sudo('rm /etc/nginx/sites-enabled/default')  # Remove the default Nginx configuration
+        c.sudo('rm /etc/nginx/sites-enabled/default', pty=True, watchers=[sudo_pass])  # Remove the default Nginx configuration
         nginx_config = '''
         server {
             listen 80;
@@ -91,32 +101,34 @@ def configure_nginx():
             }
         }
         '''
-        c.sudo("echo '{}' | tee /etc/nginx/sites-available/myproject".format(nginx_config))  # Write the Nginx config for Django
-        c.sudo('ln -s /etc/nginx/sites-available/myproject /etc/nginx/sites-enabled/')  # Enable the site in Nginx
-        c.sudo('service nginx restart')  # Restart Nginx to apply changes
+        c.sudo("echo '{}' | tee /etc/nginx/sites-available/myproject".format(nginx_config), pty=True, watchers=[sudo_pass])  # Write the Nginx config for Django
+        c.sudo('ln -s /etc/nginx/sites-available/myproject /etc/nginx/sites-enabled/', pty=True, watchers=[sudo_pass])  # Enable the site in Nginx
+        c.sudo('service nginx restart', pty=True, watchers=[sudo_pass])  # Restart Nginx to apply changes
         print("Nginx configured successfully.")
     except Exception as e:
         print(f"Error configuring Nginx: {e}")
 
-def run_django():
+@task
+def run_django(ctx):
     try:
         # Run Django development server in the background on port 8000
-        c.sudo('cd ~/opt/wwc/mysites/lab && source ../myenv/bin/activate && nohup python3 manage.py runserver 0.0.0.0:8000 &')
+        c.sudo('cd ~/opt/wwc/mysites/lab && source ../myenv/bin/activate && nohup python3 manage.py runserver 0.0.0.0:8000 &', pty=True, watchers=[sudo_pass])
         print('Django development server running on port 8000.')
     except Exception as e:
         print(f"Error running Django server: {e}")
 
-# Main function to orchestrate the setup
-def setup_django_on_ec2():
+@task
+def setup_django_on_ec2(ctx):
     try:
-        update_and_install()  # Step 1: Update and install necessary packages
-        create_project_directory()  # Step 2: Create a project directory
-        setup_virtualenv_and_django()  # Step 3: Set up Python virtual environment and Django
-        edit_django_files()  # Step 4: Edit necessary Django files (views, urls)
-        configure_nginx()  # Step 5: Configure Nginx for proxying to the Django server
-        run_django()  # Step 6: Run the Django server on port 8000
+        update_and_install(ctx)  # Step 1: Update and install necessary packages
+        create_project_directory(ctx)  # Step 2: Create a project directory
+        setup_virtualenv_and_django(ctx)  # Step 3: Set up Python virtual environment and Django
+        edit_django_files(ctx)  # Step 4: Edit necessary Django files (views, urls)
+        configure_nginx(ctx)  # Step 5: Configure Nginx for proxying to the Django server
+        run_django(ctx)  # Step 6: Run the Django server on port 8000
     except Exception as e:
         print(f"Error in setup: {e}")
+
 
 # Execute the setup function
 if __name__ == "__main__":
