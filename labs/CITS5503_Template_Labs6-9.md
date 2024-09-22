@@ -441,7 +441,8 @@ if __name__ == "__main__":
 A detailed explanation is provided as comments in the code block above.
 
 #### Results
-Created an application load balancer. (As shown in Step 2 Health check)
+Created an application load balancer. (I forgot to make a screenshot initially, so I created another one named "22756463-load-balancer4")
+![alt text](image-60.png)
 
 ### [2] Health check
 I updated the above code in Step 1 to add a health check for the target group. I specified `/polls/` as the path for the health check in the target group configuration. I then confirmed that the health check was fetching the `/polls/` page every 30 seconds as expected using AWS Console.
@@ -597,14 +598,339 @@ I run the Django application again by using the command `python3 manage.py runse
 (After zoomed in)
 ![alt text](image-58.png)
 
+## [Unmarked] Web interface for CloudStorage application
+
+### [1] Create AWS DynamoDB table
+
+#### 1.1 Create S3 bucket and upload target directory content
+
+##### Python script `cloudstorage.py`
+```python
+import os
+import boto3
+import base64
+
+ROOT_DIR = '.'
+ROOT_S3_DIR = '22756463-cloudstorage'
+
+s3 = boto3.client("s3")
+
+bucket_region = 'us-east-1'
+
+bucket_config = {'LocationConstraint': bucket_region} 
+
+
+def upload_file(folder_name, file, file_name):
+    print("Uploading %s" % file)
+
+    try:
+        s3.upload_file(file, ROOT_S3_DIR, folder_name+file_name)
+    except Exception as error:
+        print(error)
+        pass
+
+try:
+    # Check if bucket exists
+    s3.head_bucket(Bucket=ROOT_S3_DIR)
+    print(f"Bucket {ROOT_S3_DIR} already exists.")
+except Exception as error:
+    # If bucket does not exist, create it
+    print(f"Creating bucket {ROOT_S3_DIR}...")
+    try:
+        if bucket_region == 'us-east-1':
+            # us-east-1 (N. Virginia) does not require LocationConstraint
+            s3.create_bucket(Bucket=ROOT_S3_DIR)
+        else:
+            response = s3.create_bucket(
+                Bucket=ROOT_S3_DIR,
+                CreateBucketConfiguration=bucket_config
+            )
+            print(f"Bucket {ROOT_S3_DIR} created successfully.")
+    except Exception as error:
+        print(f"Error creating bucket: {str(error)}")
+        raise
+
+
+# parse directory and upload files
+for dir_name, subdir_list, file_list in os.walk(ROOT_DIR, topdown=True):
+    if dir_name != ROOT_DIR:
+        for fname in file_list:
+            # Check if the file is visible (not starting with a dot)
+            if not fname.startswith('.'):
+                upload_file("%s/" % dir_name[2:], "%s/%s" % (dir_name, fname), fname)
+
+print("done")
+```
+
+##### Results
+S3 bucket created with the target content:
+![alt text](image-61.png)
+
+
+#### 1.2 Run DynamoDB local
+After I changed into the `dynamodb` directory in my Ubuntu environment, I run the DynamoDB local using the command `java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar –sharedDb`.
+
+##### Commands
+- `java`: This is the Java command that starts the Java runtime environment. It’s necessary because DynamoDB Local is a Java-based program.
+
+- `-Djava.library.path=./DynamoDBLocal_lib`: This argument specifies the path where the *necessary native libraries for DynamoDB Local* are located. In this case, ./DynamoDBLocal_lib refers to a directory in the current folder that contains the required libraries.
+
+- `-jar DynamoDBLocal.jar`: This tells Java to execute the DynamoDBLocal.jar file, which is the executable file for DynamoDB Local.
+
+- `–sharedDb`: This option tells DynamoDB Local to use a shared database file for all the tables, rather than creating separate databases for each access pattern or client. It simulates the single, global DynamoDB environment that you would have in AWS, allowing all clients and users to access the same tables and data.
+
+##### Results
+
+
 
 <div style="page-break-after: always;"></div>
 
 # Lab 7
 
+## Create an EC2 instance
+I created an EC2 instance using the following 
+
+### Python script `create_ec2_instance.py`
+```python
+import boto3
+from botocore.exceptions import ClientError
+
+# Create a Boto3 EC2 client
+ec2 = boto3.client('ec2')
+
+def create_instance(key_name, security_group_name, ami_id):
+    try:
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/ec2/client/run_instances.html
+        instance = ec2.run_instances(
+            ImageId= ami_id,
+            MinCount=1,
+            MaxCount=1,
+            InstanceType='t2.micro',
+            KeyName=key_name,
+            SecurityGroups=[security_group_name],
+            TagSpecifications=[
+                    {
+                        'ResourceType': 'instance',
+                        'Tags': [
+                            {'Key': 'Name', 'Value': f'22756463-vm'}
+                        ]
+                    }
+                ]
+        )
+        instance_id = instance['Instances'][0]['InstanceId']
+        print(f"EC2 instance created with Instance ID: {instance_id}")
+        return instance_id
+    except ClientError as e:
+        print(f"Error creating EC2 instance: {e}")
+        return None
+    
+def main():
+    sg_name = "22756463-sg"
+    sg_description = "security group for development environment"
+    key_name = "22756463-key"
+    ami_id = "ami-0a0e5d9c7acc336f1"
+    
+    # Create an EC2 instance
+    instance_id = create_instance(key_name, sg_name, ami_id)
+
+if __name__ == "__main__":
+    main()
+```
+
+### Results
+Created an EC2 instance with ID `i-0baeaff2e48250061`.
+![alt text](image-62.png)
+
+## Install and configure Fabric
+### [1] Install Fabric
+I used the command `pip install fabric` to install Fabric in my Linux environment. Fabric is a Python library and command-line tool for streamlining the use of SSH for application deployment or systems administration tasks.
+
+#### Commands
+- `pip`: The Python’s package installer, which allows me to install and manage software packages written in Python.
+- `install`: This is the specific command telling `pip` to install a package.
+- `fabric`: This is the name of the package we want to install. Fabric is a high-level Python library that simplifies tasks such as deployment, automation, and managing remote servers via SSH.
+
+#### Results
+Successfully installed Fabric.
+![alt text](image-63.png)
+
+### [2] Create a config file in `~/.ssh`
+I first changed into the directory by using command `cd ~/.ssh`. Then I created a config file by using the command `nano config`. 
+
+#### Commands
+- `cd`: This stands for "change directory." It is used to move into a different directory on the system.
+- `~/.ssh`: The `~` symbol refers to the home directory (e.g., /home/username/ on Linux). The .ssh directory is a hidden folder in the home directory where SSH-related files, such as private/public keys and configuration files, are stored.
+- `nano`: A text editor in Linux that opens files for editing in the terminal.
+- `config`: The name of the file we want to edit or create. In this case, `config` is the SSH configuration file that contains your connection settings for SSH connections. If the file doesn't exist, nano will create it.
+
+#### Content of `config`
+```
+Host 22756463-vm
+	Hostname ec2-54-208-73-14.compute-1.amazonaws.com
+	User ubuntu
+	UserKnownHostsFile /dev/null
+	StrictHostKeyChecking no
+	PasswordAuthentication no
+	IdentityFile ~/lab6/22756463-key.pem
+```
+
+#### Results
+Created the file `config`:
+![alt text](image-65.png)
+
+### [3] Connect to the instance
+I connected to the EC2 instance by activating the Python3 environment in my Linux environment. And then paste the following Python code line by line.
+
+#### Python script and explanation
+```python
+from fabric import Connection  # Import the Connection class from the fabric library for managing SSH connections
+c = Connection('22756463-vm')  # Establish an SSH connection to the machine named '22756463-vm'
+result = c.run('uname -s')  # Run the 'uname -s' command on the remote machine to get the operating system name
+```
+A detailed explanation is provided as comments above.
+
+#### Results
+Connected to the EC2 instance.
+![alt text](image-64.png)
+
+## Use Fabric for automation
+I automated the setup of a Python3 virtual environment, nginx and a Django app within the EC2 instance I created in Step 1 using the below Python script.
+
+### Python script
+```python
+from invoke import Responder
+from fabric import Connection
+import sys  # To use sys.exit for terminating the program on error
+
+# Establish SSH connection to the EC2 instance
+c = Connection('22756463-vm')
+
+# Create a Responder to handle the sudo password prompt
+sudo_pass = Responder(
+    pattern=r'\[sudo\] password:',
+    response='600770\n'  # Replace with your actual sudo password
+)
+
+def update_and_install():
+    try:
+        # Update the instance's package lists and install necessary packages
+        c.sudo('apt update -y', pty=True, watchers=[sudo_pass])  # Update package list
+        c.sudo('apt upgrade -y', pty=True, watchers=[sudo_pass])  # Upgrade packages
+        c.sudo('apt install -y python3-venv python3-pip nginx', pty=True, watchers=[sudo_pass])  # Install Python, pip, and Nginx
+        print("Packages updated and installed successfully.")
+    except Exception as e:
+        print(f"Error during package installation: {e}")
+        sys.exit(1)  # Exit the program if there's an error
+
+
+def create_project_directory():
+    try:
+        # Create a directory for the Django project
+        c.sudo('mkdir -p ~/opt/wwc/mysites', pty=True, watchers=[sudo_pass])  # Create directory for the Django project
+        # Ensure the user has ownership of the directory
+        c.sudo('chown -R ubuntu:ubuntu ~/opt/wwc/mysites', pty=True, watchers=[sudo_pass])
+        print("Project directory created.")
+    except Exception as e:
+        print(f"Error creating project directory: {e}")
+        sys.exit(1)  # Exit the program if there's an error
+
+
+def setup_virtualenv_and_django():
+    try:
+        # Create a Python virtual environment and install Django (without sudo)
+        c.run('bash -c "cd ~/opt/wwc/mysites && python3 -m venv myvenv && source myvenv/bin/activate && pip install django && django-admin startproject lab && cd lab && python manage.py startapp polls"', pty=True)  # Create virtual environment
+        print("Python virtual environment and Django project set up successfully.")
+    except Exception as e:
+        print(f"Error setting up virtual environment and Django: {e}")
+        sys.exit(1)
+
+
+def edit_django_files():
+    try:
+        # Ensure the target directories have the correct ownership
+        c.sudo('chown -R ubuntu:ubuntu /home/ubuntu/opt/wwc/mysites/lab', pty=True, watchers=[sudo_pass])
+
+        # List the directories to verify permissions and existence
+        c.run('ls -lR /home/ubuntu/opt/wwc/mysites/lab', pty=True)
+
+        # Upload files to the remote server
+        result = c.put('./polls/views.py', remote='/home/ubuntu/opt/wwc/mysites/lab/polls/views.py')
+
+        result = c.put('./polls/urls.py', remote='/home/ubuntu/opt/wwc/mysites/lab/polls/urls.py')
+
+        result = c.put('./lab/urls.py', remote='/home/ubuntu/opt/wwc/mysites/lab/lab/urls.py')
+
+        print("Django files uploaded successfully.")
+    except Exception as e:
+        print(f"Error editing Django files: {e}")
+        sys.exit(1)
+
+
+def configure_nginx():
+    try:
+        # Upload file to a directory where you have write permissions
+        result = c.put('./default', remote='/home/ubuntu/default')
+        print("Uploaded {0.local} to {0.remote}".format(result))
+
+        # Move the file to /etc/nginx/sites-enabled/ with sudo
+        c.sudo('mv /home/ubuntu/default /etc/nginx/sites-enabled/default', pty=True, watchers=[sudo_pass])
+
+        # Use sudo to restart Nginx after verifying the configuration
+        c.sudo('service nginx restart', pty=True, watchers=[sudo_pass])
+        
+        print("Nginx configured and restarted successfully.")
+    
+    except Exception as e:
+        print(f"Error configuring Nginx: {e}")
+        sys.exit(1)
+
+
+def run_django():
+    try:
+        # Command to run the Django server in the background in the virtual environment
+        commands = '''
+        source ~/opt/wwc/mysites/myvenv/bin/activate && \
+        cd ~/opt/wwc/mysites/lab && \
+        python3 manage.py runserver 8000
+        '''
+        # Execute all the commands in one shell with activated virtualenv
+        c.run(f'bash -c "{commands}"', pty=True)
+        print('Django development server running on port 8000.')
+    except Exception as e:
+        print(f"Error running Django server: {e}")
+        sys.exit(1)
+
+
+def setup_django_on_ec2():
+    try:
+        update_and_install()  # Step 1: Update and install necessary packages
+        create_project_directory()  # Step 2: Create a project directory
+        setup_virtualenv_and_django()  # Step 3: Set up Python virtual environment and Django
+        edit_django_files()  # Step 4: Edit necessary Django files (views, urls)
+        configure_nginx()  # Step 5: Configure Nginx for proxying to the Django server
+        run_django()  # Step 6: Run the Django server on port 8000
+    except Exception as e:
+        print(f"Error in setup: {e}")
+        sys.exit(1)  # Exit the program if there's a failure in setup
+
+
+# Execute the setup function
+if __name__ == "__main__":
+    setup_django_on_ec2()
+```
+
+### Results
+(After zoomed in) The server is running and the `http://54.208.73.14/polls/` page shows "Hello, world."
+![alt text](image-66.png)
+
+
 <div style="page-break-after: always;"></div>
 
 # Lab 8
+
+
+
+
 
 <div style="page-break-after: always;"></div>
 
