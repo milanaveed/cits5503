@@ -924,10 +924,13 @@ if __name__ == "__main__":
 ![alt text](image-66.png)
 
 
-
 <div style="page-break-after: always;"></div>
 
 # Lab 8
+
+
+
+
 
 <div style="page-break-after: always;"></div>
 
