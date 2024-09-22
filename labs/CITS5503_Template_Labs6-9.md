@@ -766,7 +766,7 @@ I first changed into the directory by using command `cd ~/.ssh`. Then I created 
 #### Content of `config`
 ```
 Host 22756463-vm
-	Hostname ec2-3-87-135-215.compute-1.amazonaws.com
+	Hostname ec2-54-208-73-14.compute-1.amazonaws.com
 	User ubuntu
 	UserKnownHostsFile /dev/null
 	StrictHostKeyChecking no
@@ -798,9 +798,13 @@ TODO: create the EC2 instance again.
 
 
 ### Python script
+```python
+
+```
 
 ### Results
-
+(After zoomed in)
+![alt text](image-66.png)
 
 
 
