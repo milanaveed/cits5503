@@ -803,7 +803,7 @@ from fabric import Connection
 import sys  # To use sys.exit for terminating the program on error
 
 # Establish SSH connection to the EC2 instance
-c = Connection('22756463-vm')  # Replace with your EC2 instance identifier or hostname
+c = Connection('22756463-vm')
 
 # Create a Responder to handle the sudo password prompt
 sudo_pass = Responder(
@@ -855,21 +855,16 @@ def edit_django_files():
 
         # Upload files to the remote server
         result = c.put('./polls/views.py', remote='/home/ubuntu/opt/wwc/mysites/lab/polls/views.py')
-        print("Uploaded {0.local} to {0.remote}".format(result))
 
         result = c.put('./polls/urls.py', remote='/home/ubuntu/opt/wwc/mysites/lab/polls/urls.py')
-        print("Uploaded {0.local} to {0.remote}".format(result))
 
         result = c.put('./lab/urls.py', remote='/home/ubuntu/opt/wwc/mysites/lab/lab/urls.py')
-        print("Uploaded {0.local} to {0.remote}".format(result))
-
-        # Verify the uploaded files
-        c.run('ls -l /home/ubuntu/opt/wwc/mysites/lab/polls /home/ubuntu/opt/wwc/mysites/lab/lab', pty=True)
 
         print("Django files uploaded successfully.")
     except Exception as e:
         print(f"Error editing Django files: {e}")
         sys.exit(1)
+
 
 def configure_nginx():
     try:

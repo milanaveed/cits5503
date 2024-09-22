@@ -3,12 +3,12 @@ from fabric import Connection
 import sys  # To use sys.exit for terminating the program on error
 
 # Establish SSH connection to the EC2 instance
-c = Connection('22756463-vm')  # Replace with your EC2 instance identifier or hostname
+c = Connection('22756463-vm')
 
 # Create a Responder to handle the sudo password prompt
 sudo_pass = Responder(
     pattern=r'\[sudo\] password:',
-    response='600770\n'  # Replace with your actual sudo password
+    response='600770\n'
 )
 
 
