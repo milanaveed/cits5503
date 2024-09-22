@@ -1406,11 +1406,8 @@ Launched the tuning job:
 
 Completed tuning job and the output are generated in S3 bucket.
 
-Training status for `22756463-xgboost-tuningjob-02-001-3d256f27`:
-![alt text](image-87.png)
-
-Training status for `22756463-xgboost-tuningjob-02-002-6b1a35e6`:
-![alt text](image-84.png)
+Training status for the hyperparameter tuning job `22756463-xgboost-tuningjob-02`:
+![alt text](image-88.png)
 
 Output for `22756463-xgboost-tuningjob-02-001-3d256f27/`:
 ![alt text](image-85.png)
