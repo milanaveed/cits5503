@@ -73,13 +73,6 @@ def edit_django_files():
         print(f"Error editing Django files: {e}")
         sys.exit(1)
 
-        print("Django files edited successfully.")
-    
-    except Exception as e:
-        print(f"Error editing Django files: {e}")
-        sys.exit(1)
-
-
 
 def configure_nginx():
     try:
