@@ -1338,17 +1338,21 @@ model_data = model_data.drop(
     ["duration", "emp.var.rate", "cons.price.idx", "cons.conf.idx", "euribor3m", "nr.employed"],
     axis=1,
 )
+# Ensure all Boolean columns are converted to numeric (1/0)
+model_data = model_data.applymap(lambda x: 1 if x is True else (0 if x is False else x))
 model_data
 ```
 - `data["pdays"] == 999, 1, 0`: This checks if the value of pdays (the number of days since the client was last contacted) is 999. In the dataset, 999 often indicates that the client has never been contacted before. If pdays equals 999, assign a value of 1 (indicating no previous contact). Otherwise, assign a 0 (indicating the client has been contacted before).
 - `np.in1d(data["job"], ["student", "retired", "unemployed"]), 1, 0`: This checks whether the values in the job column are in the list ["student", "retired", "unemployed"]. The function returns a boolean array: True if the job is one of those three and False otherwise. If the person is a student, retired, or unemployed, the value will be set to 1 (indicating they are not actively employed). Otherwise, it will be set to 0.
 - `pd.get_dummies(data)`: This function converts categorical variables into dummy/indicator variables (also called one-hot encoding). It creates a new binary column for each category in the original categorical columns.
 - `model_data.drop([...], axis=1)`: This drops the listed columns from the `model_data` DataFrame.
+- `model_data = model_data.applymap(lambda x: 1 if x is True else (0 if x is False else x))`: This line ensures that all Boolean values are converted to 1 for True and 0 for False. This is important because XGBoost only accepts numeric input.
 
 ##### Results
-Created two new indicator columns, converted categorical columns into binary dummy variables, and removed the economic features and the duration column.
+Created two new indicator columns, converted categorical columns into binary dummy variables, removed the economic features and the duration column and converted all boolean values to numerical values.
 ![alt text](image-76.png)
 ![alt text](image-77.png)
+![alt text](image-81.png)
 
 ### [4] Split the data into training, validation and test
 I split the dataset into training (70%), validation (20%), and test (10%) sets, then converted them to CSV format for use with Amazon SageMaker's XGBoost algorithm. The first column in each CSV file is the target variable, and the files do not include headers. The training and validation datasets will be used during the model training process, while the test dataset will be reserved for evaluating the model's performance after it has been deployed to an endpoint. Finally, I uploaded the files to the previously created S3 bucket for Amazon SageMaker to access during training.
@@ -1386,25 +1390,134 @@ Split, tranformed and uploaded the dataset:
 
 ### [5] Setup hyperparameter tuning
 
-#### Python code
+#### 5.1 Set up the the name and configuration for the tuning job
+
+##### Python code
+```python
+# Set up the the name and configuration for a hyperparameter tuning job.
+from time import gmtime, strftime, sleep
+
+# Names have to be unique. You will get an error if you reuse the same name
+tuning_job_name = f"{student_id}-xgboost-tuningjob-02"
+
+print(tuning_job_name)
+
+tuning_job_config = {
+    "ParameterRanges": {
+        "CategoricalParameterRanges": [],
+        "ContinuousParameterRanges": [
+            {
+                "MaxValue": "1",
+                "MinValue": "0",
+                "Name": "eta",
+            },
+            {
+                "MaxValue": "10",
+                "MinValue": "1",
+                "Name": "min_child_weight",
+            },
+            {
+                "MaxValue": "2",
+                "MinValue": "0",
+                "Name": "alpha",
+            },
+        ],
+        "IntegerParameterRanges": [
+            {
+                "MaxValue": "10",
+                "MinValue": "1",
+                "Name": "max_depth",
+            }
+        ],
+    },
+    "ResourceLimits": {"MaxNumberOfTrainingJobs": 2, "MaxParallelTrainingJobs": 2},
+    "Strategy": "Bayesian",
+    "HyperParameterTuningJobObjective": {"MetricName": "validation:auc", "Type": "Maximize"},
+}
+```
+
+#### 5.2 Specify the XGBoost algorithm for the tuning job
+
+##### Python code
+```python
+# Specify the XGBoost algorithm for subsequent tuning.
+from sagemaker.image_uris import retrieve
+# Use XGBoost algorithm for training
+training_image = retrieve(framework="xgboost", region=region, version="latest")
+
+s3_input_train = "s3://{}/{}/train".format(bucket, prefix)
+s3_input_validation = "s3://{}/{}/validation/".format(bucket, prefix)
+
+training_job_definition = {
+    "AlgorithmSpecification": {"TrainingImage": training_image, "TrainingInputMode": "File"},
+    "InputDataConfig": [
+        {
+            "ChannelName": "train",
+            "CompressionType": "None",
+            "ContentType": "csv",
+            "DataSource": {
+                "S3DataSource": {
+                    "S3DataDistributionType": "FullyReplicated",
+                    "S3DataType": "S3Prefix",
+                    "S3Uri": s3_input_train,
+                }
+            },
+        },
+        {
+            "ChannelName": "validation",
+            "CompressionType": "None",
+            "ContentType": "csv",
+            "DataSource": {
+                "S3DataSource": {
+                    "S3DataDistributionType": "FullyReplicated",
+                    "S3DataType": "S3Prefix",
+                    "S3Uri": s3_input_validation,
+                }
+            },
+        },
+    ],
+    "OutputDataConfig": {"S3OutputPath": "s3://{}/{}/output".format(bucket, prefix)},
+    "ResourceConfig": {"InstanceCount": 1, "InstanceType": "ml.m5.xlarge", "VolumeSizeInGB": 10},
+    "RoleArn": sagemaker_role,
+    "StaticHyperParameters": {
+        "eval_metric": "auc",
+        "num_round": "1",
+        "objective": "binary:logistic",
+        "rate_drop": "0.3",
+        "tweedie_variance_power": "1.4",
+    },
+    "StoppingCondition": {"MaxRuntimeInSeconds": 43200},
+}
+```
+
+##### Results
 
 
-#### Results
-Launched the tuning job and 
-![alt text](image-80.png)
+#### 5.3 Launch the tunign job
 
-Encountered error:
-![alt text](image-82.png)
+##### Python code
+```python
+#Launch Hyperparameter Tuning Job
+smclient.create_hyper_parameter_tuning_job(
+    HyperParameterTuningJobName=tuning_job_name,
+    HyperParameterTuningJobConfig=tuning_job_config,
+    TrainingJobDefinition=training_job_definition,
+)
+```
 
-Converted Boolean values (True/False) to numeric (1/0), as XGBoost does not accept Boolean values.
-![alt text](image-81.png)
-
-
-Launched the tuning job:
+##### Results
+Launched and completed the tuning job. The outputs are generated in the S3 bucket.
+```
+{'HyperParameterTuningJobArn': 'arn:aws:sagemaker:us-east-1:489389878001:hyper-parameter-tuning-job/22756463-xgboost-tuningjob-02',
+ 'ResponseMetadata': {'RequestId': '89680059-3538-4784-87da-ebd9cce80496',
+  'HTTPStatusCode': 200,
+  'HTTPHeaders': {'x-amzn-requestid': '89680059-3538-4784-87da-ebd9cce80496',
+   'content-type': 'application/x-amz-json-1.1',
+   'content-length': '130',
+   'date': 'Sun, 22 Sep 2024 13:22:21 GMT'},
+  'RetryAttempts': 0}}
+```
 ![alt text](image-83.png)
-
-
-Completed tuning job and the output are generated in S3 bucket.
 
 Training status for the hyperparameter tuning job `22756463-xgboost-tuningjob-02`:
 ![alt text](image-88.png)
