@@ -1210,6 +1210,83 @@ Requirement already satisfied: asttokens>=2.1.0 in ./.local/lib/python3.10/site-
 
 ## Run hyperparameter tuning jobs
 
+### [1] Install libraries
+Installed sagemaker, pandas and numpy via jupyter notebook using commands `!pip install sagemaker`, `!pip install pandas` and `!pip install numpy`.
+
+#### Commands
+- `!`: The exclamation mark is used in Jupyter notebooks to *run shell commands directly from a code cell*. So `!pip` is used to invoke the shell's pip command from the notebook environment.
+- `pip`: This is the Python package manager, used to install packages.
+- `install`: Tells pip to install a specific package.
+- `sagemaker`: This is the package we are installing, which is the Amazon SageMaker Python SDK. It allows us to build, train, and deploy machine learning models using AWS SageMaker from our local environment.
+- `pandas`: The name of the package we want to install. It is a popular Python library for data manipulation and analysis, especially with tabular data (similar to a spreadsheet or SQL table).
+- `numpy`: The name of the package to install. It is a fundamental package for scientific computing with Python. It provides support for large, multi-dimensional arrays and matrices, along with a collection of mathematical functions to operate on these arrays efficiently.
+
+#### Results
+![alt text](image-69.png)
+
+### [2] Prepare a SageMaker session
+
+#### Python script
+```
+import sagemaker
+import boto3
+
+import numpy as np  # For matrix operations and numerical processing
+import pandas as pd  # For munging tabular data
+from time import gmtime, strftime
+from botocore.exceptions import ClientError
+import os
+
+smclient = boto3.Session().client("sagemaker")
+iam = boto3.client('iam')
+s3 = boto3.client("s3")
+sagemaker_role = iam.get_role(RoleName='SageMakerRole')['Role']['Arn']
+region = 'us-east-1' # use the region you are mapped to 
+student_id = "22756463" 
+bucket = '22756463-lab8' # use <studentid-lab8> as your bucket name
+prefix = f"sagemaker/{student_id}-hpo-xgboost-dm" 
+bucket_config = {'LocationConstraint': region} 
+
+# Create an S3 bucket using the bucket variable above. The bucket creation is done using the region variable above.
+try:
+    # Check if bucket exists
+    s3.head_bucket(Bucket=bucket)
+    print(f"Bucket {bucket} already exists.")
+except Exception as error:
+    # If bucket does not exist, create it
+    print(f"Creating bucket {bucket}...")
+    try:
+        if region == 'us-east-1':
+            # us-east-1 (N. Virginia) does not require LocationConstraint
+            s3.create_bucket(Bucket=bucket)
+            print(f"Bucket {bucket} created successfully.")
+        else:
+            response = s3.create_bucket(
+                Bucket=bucket,
+                CreateBucketConfiguration=bucket_config
+            )
+            print(f"Bucket {bucket} created successfully.")
+    except Exception as error:
+        print(f"Error creating bucket: {str(error)}")
+        raise
+
+# Create an object in the bucket. The object is a folder and its name is the prefix variable above. 
+try:
+    # Upload an empty object to create a "folder" in S3
+    s3.put_object(Bucket=bucket, Key=(prefix + '/'))
+    print(f"Folder '{prefix}' created in bucket '{bucket}'.")
+except ClientError as e:
+    # Handle any S3-related errors
+    print(f"Error creating folder in bucket: {e.response['Error']['Message']}")
+except Exception as e:
+    # Handle any other unexpected errors
+    print(f"An unexpected error occurred: {str(e)}")
+```
+
+#### Results
+Created a S3 bucket named `22756463-lab8`. And created an empty folder `sagemaker/22756463-hpo-xgboost-dm` in the S3 bucket.
+![alt text](image-71.png)
+![alt text](image-70.png)
 
 <div style="page-break-after: always;"></div>
 
