@@ -1285,8 +1285,138 @@ except Exception as e:
 
 #### Results
 Created a S3 bucket named `22756463-lab8`. And created an empty folder `sagemaker/22756463-hpo-xgboost-dm` in the S3 bucket.
+![alt text](image-72.png)
 ![alt text](image-71.png)
 ![alt text](image-70.png)
+
+### [3] Prepare a dataset
+
+#### 3.1 Download the dataset
+I first opened a new terminal window and installed `unzip` by using the commands `sudo apt-get update` and `sudo apt-get install -y unzip`.
+
+##### Commands
+- `sudo`: Run commands with administrative or root privileges.
+- `apt-get`: The package management command-line tool used in Debian-based Linux distributions (like Ubuntu) for handling software packages.
+- `update`: This command updates the package lists for upgrades or new installations. It fetches the latest available versions of the software from the repositories. Essentially, it ensures that the system knows about the latest packages and versions available for installation.
+- `-y`: This flag tells `apt-get` to automatically answer "yes" to any prompts during the installation process.
+- `unzip`: This specifies the package we want to install. `unzip` is a utility that extracts files from .zip archives.
+
+##### Results
+Installed `unzip`. Downloaded and unzipped the dataset.
+![alt text](image-73.png)
+![alt text](image-74.png)
+
+#### 3.2 Inspect the dataset
+I inspected the dataset by using the Python code below and answered these two questions:
+- Which variables in the dataset are categorical? Give at least four variables: job, marital, education, contact, poutcome.
+- Which variables in the dataset are numerical? Give at least four variables: age, duration, campaign, pdays, previous.
+
+##### Python code
+```python
+data = pd.read_csv("./bank-additional/bank-additional-full.csv", sep=";")
+pd.set_option("display.max_columns", 500)  # Make sure we can see all of the columns
+pd.set_option("display.max_rows", 50)  # Keep the output on one page
+data
+```
+
+##### Results
+![alt text](image-75.png)
+
+#### 3.3 Process the dataset
+I created two new indicator columns to capture relevant information, then converted the categorical columns into binary dummy variables for modelling purposes. Additionally, I removed the economic features and the duration column, as these variables would require precise forecasting to be useful as inputs for future predictions.
+
+##### Python code
+```python
+data["no_previous_contact"] = np.where(
+    data["pdays"] == 999, 1, 0
+)  # Indicator variable to capture when pdays takes a value of 999
+data["not_working"] = np.where(
+    np.in1d(data["job"], ["student", "retired", "unemployed"]), 1, 0
+)  # Indicator for individuals not actively employed
+model_data = pd.get_dummies(data)  # Convert categorical variables to sets of indicators
+model_data = model_data.drop(
+    ["duration", "emp.var.rate", "cons.price.idx", "cons.conf.idx", "euribor3m", "nr.employed"],
+    axis=1,
+)
+model_data
+```
+- `data["pdays"] == 999, 1, 0`: This checks if the value of pdays (the number of days since the client was last contacted) is 999. In the dataset, 999 often indicates that the client has never been contacted before. If pdays equals 999, assign a value of 1 (indicating no previous contact). Otherwise, assign a 0 (indicating the client has been contacted before).
+- `np.in1d(data["job"], ["student", "retired", "unemployed"]), 1, 0`: This checks whether the values in the job column are in the list ["student", "retired", "unemployed"]. The function returns a boolean array: True if the job is one of those three and False otherwise. If the person is a student, retired, or unemployed, the value will be set to 1 (indicating they are not actively employed). Otherwise, it will be set to 0.
+- `pd.get_dummies(data)`: This function converts categorical variables into dummy/indicator variables (also called one-hot encoding). It creates a new binary column for each category in the original categorical columns.
+- `model_data.drop([...], axis=1)`: This drops the listed columns from the `model_data` DataFrame.
+
+##### Results
+Created two new indicator columns, converted categorical columns into binary dummy variables, and removed the economic features and the duration column.
+![alt text](image-76.png)
+![alt text](image-77.png)
+
+### [4] Split the data into training, validation and test
+I split the dataset into training (70%), validation (20%), and test (10%) sets, then converted them to CSV format for use with Amazon SageMaker's XGBoost algorithm. The first column in each CSV file is the target variable, and the files do not include headers. The training and validation datasets will be used during the model training process, while the test dataset will be reserved for evaluating the model's performance after it has been deployed to an endpoint. Finally, I uploaded the files to the previously created S3 bucket for Amazon SageMaker to access during training.
+
+#### Python code
+```python
+train_data, validation_data, test_data = np.split(
+    model_data.sample(frac=1, random_state=1729),
+    [int(0.7 * len(model_data)), int(0.9 * len(model_data))],
+)
+
+pd.concat([train_data["y_yes"], train_data.drop(["y_no", "y_yes"], axis=1)], axis=1).to_csv(
+    "train.csv", index=False, header=False
+)
+pd.concat(
+    [validation_data["y_yes"], validation_data.drop(["y_no", "y_yes"], axis=1)], axis=1
+).to_csv("validation.csv", index=False, header=False)
+pd.concat([test_data["y_yes"], test_data.drop(["y_no", "y_yes"], axis=1)], axis=1).to_csv(
+    "test.csv", index=False, header=False
+)
+
+boto3.Session().resource("s3").Bucket(bucket).Object(
+    os.path.join(prefix, "train/train.csv")
+).upload_file("train.csv")
+boto3.Session().resource("s3").Bucket(bucket).Object(
+    os.path.join(prefix, "validation/validation.csv")
+).upload_file("validation.csv")
+```
+
+#### Results
+Split, tranformed and uploaded the dataset:
+![alt text](image-78.png)
+![alt text](image-79.png)
+
+
+### [5] Setup hyperparameter tuning
+
+#### Python code
+
+
+#### Results
+Launched the tuning job and 
+![alt text](image-80.png)
+
+Encountered error:
+![alt text](image-82.png)
+
+Converted Boolean values (True/False) to numeric (1/0), as XGBoost does not accept Boolean values.
+![alt text](image-81.png)
+
+
+Launched the tuning job:
+![alt text](image-83.png)
+
+
+Completed tuning job and the output are generated in S3 bucket.
+
+Training status for `22756463-xgboost-tuningjob-02-001-3d256f27`:
+![alt text](image-87.png)
+
+Training status for `22756463-xgboost-tuningjob-02-002-6b1a35e6`:
+![alt text](image-84.png)
+
+Output for `22756463-xgboost-tuningjob-02-001-3d256f27/`:
+![alt text](image-85.png)
+
+Output for `22756463-xgboost-tuningjob-02-002-6b1a35e6/`:
+![alt text](image-86.png)
 
 <div style="page-break-after: always;"></div>
 
