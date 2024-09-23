@@ -1534,4 +1534,67 @@ Output for `22756463-xgboost-tuningjob-02-002-6b1a35e6/`:
 <div style="page-break-after: always;"></div>
 
 # Lab 9
+## AWS Comprehend
+### Detect Languages from text
+#### [1] Modify the code above
+To map language codes to corresponding languages, I installed the package `pycountry` by using the command `pip install pycountry`. Then I modified the provided code to better display the results by using the below code.
 
+##### Commands and Python script
+- `pip`: This is the Python package installer, a tool used to download and manage Python packages from the Python Package Index (PyPI).
+- `install`: This instructs `pip` to install a specified package onto the system or virtual environment.
+-`pycountry`: The name of the Python package we want to install, which provides access to *country and language information*.
+
+```python  
+import boto3
+import pycountry
+
+# Create a client to interact with AWS Comprehend
+client = boto3.client('comprehend')
+
+# Function to get the language name from the ISO 639-1 code using pycountry
+def get_language_name(language_code):
+    try:
+        # Look up the language by its ISO 639-1 code
+        language = pycountry.languages.get(alpha_2=language_code)
+        return language.name if language else 'Unknown Language'  # Return language name or 'Unknown Language'
+    except KeyError:
+        return 'Unknown Language'  # Handle the case where the code is not found
+
+# Function to detect the dominant language in a given text
+def detect_language(text):
+    # Call AWS Comprehend to detect dominant languages in the text
+    response = client.detect_dominant_language(Text=text)
+    # Loop through each detected language in the response
+    for language in response['Languages']:
+        language_code = language['LanguageCode']  # Extract the language code
+        confidence = round(language['Score'] * 100, 0)  # Convert confidence score to a percentage and round it
+        language = get_language_name(language_code)  # Get the full language name using the language code
+        # Print the language and confidence score
+        print(f'{language} detected with {confidence:.0f}% confidence')
+    return  # Return nothing as this is a printing function
+
+# Main function to test the language detection
+def main():
+    text = "The French Revolution was a period of social and political upheaval in France and its colonies beginning in 1789 and ending in 1799."  # Sample text
+    detect_language(text)  # Call the function to detect language
+
+# Execute the main function if this script is run directly
+if __name__ == "__main__":
+    main()
+```
+A detailed explanation is provided as comments in the above code block.
+
+
+##### Results
+Installed `pycountry`.
+```
+Defaulting to user installation because normal site-packages is not writeable
+Collecting pycountry
+  Downloading pycountry-24.6.1-py3-none-any.whl (6.3 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 2.8 MB/s eta 0:00:00
+Installing collected packages: pycountry
+Successfully installed pycountry-24.6.1
+```
+![alt text](image-90.png)
+
+#### [2] Test the code with other languages
