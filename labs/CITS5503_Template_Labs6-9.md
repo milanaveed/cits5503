@@ -1744,6 +1744,7 @@ Detected entities as follows:
 ### Detect keyphrases
 I detected the key noun phrases found in the four texts using the following Python script. 
 
+**Answer this question** - describe what keyphrases are in your own words.
 #TODOTODO
 
 #### Python script `detect_keyphrases.py`
