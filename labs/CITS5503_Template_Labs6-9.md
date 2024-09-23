@@ -1691,8 +1691,8 @@ Detected sentiment for the previous 4 texts.
 ### Detect entities
 I used the below python script to detect entities for the previous four texts.
 
-**Answer this question**: describe what entities are in your own words.
-Entities are 
+**Answer this question** - describe what entities are in your own words:
+Entities are pieces of information extracted from texts. They are objects, concepts, or categories such as places, organisations, names, dates, and quantities.
 
 
 #### Python script `detect_entities.py`
