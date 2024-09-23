@@ -1595,7 +1595,7 @@ Collecting pycountry
 Installing collected packages: pycountry
 Successfully installed pycountry-24.6.1
 ```
-![alt text](image-90.png)
+![alt text](image-92.png)
 
 #### [2] Test the code with other languages
 I tested the code for the language detection task by including other texts in the `main()` function as follows.
@@ -1627,3 +1627,68 @@ if __name__ == "__main__":
 Detected different languages of other texts.
 ![alt text](image-91.png)
 
+
+### Analyze sentiment
+I used the below Python script for sentiment analysis and tested the code on the previous 4 texts.
+
+#### Python script `detect_sentiment.py`
+```python
+import boto3
+
+# Create a client to interact with AWS Comprehend
+client = boto3.client('comprehend')
+
+# Function to detect the sentiment of a given text in a specific language
+def detect_sentiment(text, language_code):
+    # Call AWS Comprehend to detect sentiment in the provided text and language
+    response = client.detect_sentiment(Text=text, LanguageCode=language_code)
+    
+    # Extract sentiment label (Positive, Negative, Neutral, or Mixed)
+    sentiment = response['Sentiment']
+    
+    # Extract the sentiment scores (confidence scores for Positive, Negative, Neutral, and Mixed)
+    sentiment_score = response['SentimentScore']
+    
+    # Print the first 60 characters of the text to provide context in the output
+    print(f"Text: {text[:60]}...")  # Show only the first 60 characters
+    
+    # Print the detected sentiment (e.g., Positive, Neutral)
+    print(f"Sentiment: {sentiment}")
+    
+    # Print the sentiment score details
+    print(f"Sentiment Scores: {sentiment_score}")
+    
+    # Print a separator line for better readability of the output
+    print('-' * 60)
+    
+    # Return the response, which includes all sentiment details
+    return response
+
+def main():
+    # Sample texts in different languages, each with an associated language code
+    texts = [
+        {"text": "The French Revolution was a period of social and political upheaval in France and its colonies beginning in 1789 and ending in 1799.", "language": "en"},
+        {"text": "El Quijote es la obra más conocida de Miguel de Cervantes Saavedra. Publicada su primera parte con el título de El ingenioso hidalgo don Quijote de la Mancha a comienzos de 1605, es una de las obras más destacadas de la literatura española y la literatura universal, y una de las más traducidas. En 1615 aparecería la segunda parte del Quijote de Cervantes con el título de El ingenioso caballero don Quijote de la Mancha.", "language": "es"},
+        {"text": "Moi je n'étais rien Et voilà qu'aujourd'hui Je suis le gardien Du sommeil de ses nuits Je l'aime à mourir Vous pouvez détruire Tout ce qu'il vous plaira Elle n'a qu'à ouvrir L'espace de ses bras Pour tout reconstruire Pour tout reconstruire Je l'aime à mourir", "language": "fr"},
+        {"text": "L'amor che move il sole e l'altre stelle.", "language": "it"}
+    ]
+
+    # Loop through each text and detect its sentiment by calling the detect_sentiment function
+    for instance in texts:
+        detect_sentiment(instance["text"], instance["language"])
+
+# Execute the main function if this script is run directly
+if __name__ == "__main__": 
+    main()  # Call the main function to process the texts
+```
+A detailed explanaiton is provided as comments in the above code block.
+
+#### Results
+Detected sentiment for the previous 4 texts.
+![alt text](image-93.png)
+
+
+### Detect entities
+
+
+#### Python script `detect_entities.py`
