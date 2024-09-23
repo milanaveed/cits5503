@@ -1692,7 +1692,7 @@ Detected sentiment for the previous 4 texts.
 I used the below python script to detect entities for the previous four texts.
 
 **Answer this question** - describe what entities are in your own words:
-Entities are pieces of information extracted from texts. They are objects, concepts, or categories such as places, organisations, names, dates, and quantities.
+Entities are pieces of information extracted from texts. They are objects, concepts, or categories such as places, organisations, names, dates, and quantities. For example, "Sam was born in France," "Sam" is a person, "France" is location. These are entities in this sentence.
 
 
 #### Python script `detect_entities.py`
