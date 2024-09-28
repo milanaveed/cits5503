@@ -1692,7 +1692,7 @@ Detected sentiment for the previous 4 texts.
 I used the below python script to detect entities for the previous four texts.
 
 **Answer this question** - describe what entities are in your own words:
-Entities are pieces of information extracted from texts. They are objects, concepts, or categories such as places, organisations, names, dates, and quantities. For example, "Sam was born in France," "Sam" is a person, "France" is location. These are entities in this sentence.
+Entities are pieces of information extracted from texts. They are *objects, concepts, or categories* such as places, organisations, names, dates, and quantities. For example, "Sam was born in France," "Sam" is a person, "France" is location. These are entities in this sentence.
 
 
 #### Python script `detect_entities.py`
@@ -1742,10 +1742,10 @@ Detected entities as follows:
 
 
 ### Detect keyphrases
-I detected the key noun phrases found in the four texts using the following Python script. 
+I detected the key phrases found in the four texts using the following Python script. 
 
-**Answer this question** - describe what keyphrases are in your own words.
-#TODOTODO
+**Answer this question** - describe what keyphrases are in your own words:
+Key phrases are meaningful pieces of text that capture the main ideas of a paragraph or article. They are generally nouns, verbs or phrases that summarise key concepts or central topics in the text. For example, in a sentence about cats' daily routine, the key phrases might be "cat", "sleep", "eat", "play" and "grooming".
 
 #### Python script `detect_keyphrases.py`
 ```python
