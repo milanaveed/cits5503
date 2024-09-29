@@ -2022,5 +2022,288 @@ Token: ., Part of Speech: PUNCT, Confidence: 1.00
 
 ## AWS Rekognition
 ### Add images
+I created a new S3 bucket named `22756463-lab9` and uploaded four images in a folder called `images` to the S3 bucket using the below Python script.
+
+#### Python script `create_bucket.py`
+```python
+import os
+import boto3
+
+# Define the root directory of the local files and the S3 bucket name
+ROOT_DIR = '.'
+ROOT_S3_DIR = '22756463-lab9'
+
+# Create an S3 client using boto3
+s3 = boto3.client("s3")
+
+# Define the region where the S3 bucket will be created
+bucket_region = 'us-east-1'
+
+# Define the bucket configuration with the location constraint (for regions other than us-east-1)
+bucket_config = {'LocationConstraint': bucket_region} 
+
+
+# Function to upload a file to the S3 bucket
+def upload_file(folder_name, file, file_name):
+    print("Uploading %s" % file)  # Print a message indicating which file is being uploaded
+
+    try:
+        # Attempt to upload the file to the S3 bucket under the specified folder
+        s3.upload_file(file, ROOT_S3_DIR, folder_name+file_name)
+    except Exception as error:
+        # If there's an error during upload, print the error message
+        print(error)
+        pass
+
+# Main function that handles the bucket creation and file upload
+def main():
+    try:
+        # Check if the bucket already exists by attempting to retrieve its metadata
+        s3.head_bucket(Bucket=ROOT_S3_DIR)
+        print(f"Bucket {ROOT_S3_DIR} already exists.")  # If it exists, print a message
+    except Exception as error:
+        # If the bucket does not exist, create it
+        print(f"Creating bucket {ROOT_S3_DIR}...")  # Print a message indicating bucket creation
+        try:
+            if bucket_region == 'us-east-1':
+                # us-east-1 (N. Virginia) does not require a LocationConstraint when creating a bucket
+                s3.create_bucket(Bucket=ROOT_S3_DIR)
+                print(f"Bucket {ROOT_S3_DIR} created successfully.")  # Success message for bucket creation
+            else:
+                # For other regions, use the LocationConstraint
+                response = s3.create_bucket(
+                    Bucket=ROOT_S3_DIR,
+                    CreateBucketConfiguration=bucket_config
+                )
+                print(f"Bucket {ROOT_S3_DIR} created successfully.")  # Success message for other regions
+        except Exception as error:
+            # If there's an error while creating the bucket, print the error and raise it
+            print(f"Error creating bucket: {str(error)}")
+            raise
+
+    # Traverse the local directory structure and upload all files to S3
+    for dir_name, subdir_list, file_list in os.walk(ROOT_DIR, topdown=True):
+        if dir_name != ROOT_DIR:  # Skip the root directory itself
+            for fname in file_list:
+                # Upload each file in the folder
+                upload_file("%s/" % dir_name[2:], "%s/%s" % (dir_name, fname), fname)
+
+    print("done")  # Indicate that the process is complete
+
+# Entry point for the script execution
+if __name__ == "__main__":
+    main()
+```
+A detailed breakdown is provided as comments in the code block above.
+
+#### Results
+Created a S3 bucket named `22756463-lab` and uploaded images to it.
+![alt text](image-96.png)
 
 ### Test AWS rekognition
+I tested label recognition, image moderation, facial analysis and text extraction from images by using the below Python script.
+
+#### Python script `test_rekognition.py`
+```python
+import boto3
+
+# Create boto3 clients for S3 and Rekognition
+s3 = boto3.client('s3')
+rekognition = boto3.client('rekognition')
+
+# Define the S3 bucket and images
+bucket_name = '22756463-lab9'  # Replace with your actual bucket name if different
+images = ['images/urban.jpg', 'images/beach.jpg', 'images/faces.jpg', 'images/text.jpg']
+
+# Function to analyze labels in the image
+def detect_labels(image):
+    response = rekognition.detect_labels(
+        Image={'S3Object': {'Bucket': bucket_name, 'Name': image}},
+        MaxLabels=10
+    )
+    print(f"\nLabels detected in {image}:")
+    for label in response['Labels']:
+        print(f"{label['Name']} - {label['Confidence']:.2f}%")
+
+# Function to check for inappropriate content in the image (moderation)
+def detect_moderation_labels(image):
+    response = rekognition.detect_moderation_labels(
+        Image={'S3Object': {'Bucket': bucket_name, 'Name': image}}
+    )
+    print(f"\nModeration labels detected in {image}:")
+    if not response['ModerationLabels']:
+        print("No inappropriate content detected.")
+    for label in response['ModerationLabels']:
+        print(f"{label['Name']} - {label['Confidence']:.2f}%")
+
+# Function to perform facial analysis (e.g., emotion detection, gender, etc.)
+def detect_faces(image):
+    response = rekognition.detect_faces(
+        Image={'S3Object': {'Bucket': bucket_name, 'Name': image}},
+        Attributes=['ALL']
+    )
+    print(f"\nFacial analysis for {image}:")
+    if not response['FaceDetails']:
+        print("No faces detected.")
+    for face in response['FaceDetails']:
+        emotions = ', '.join([emotion['Type'] for emotion in face['Emotions'] if emotion['Confidence'] > 90])
+        print(f"Face detected with emotions: {emotions}")
+        print(f"Gender: {face['Gender']['Value']}")
+        print(f"Age range: {face['AgeRange']['Low']} - {face['AgeRange']['High']}")
+
+# Function to detect and extract text from the image
+def detect_text(image):
+    response = rekognition.detect_text(
+        Image={'S3Object': {'Bucket': bucket_name, 'Name': image}}
+    )
+    print(f"\nText detected in {image}:")
+    if not response['TextDetections']:
+        print("No text detected.")
+    for text in response['TextDetections']:
+        if text['Type'] == 'LINE':
+            print(f"Detected text: {text['DetectedText']}")
+
+# Run analyses for each image
+for image_name in images:
+    print(f"\n--- Analyzing {image_name} ---")
+    
+    detect_labels(image_name)
+    
+    detect_moderation_labels(image_name)
+    
+    if 'faces' in image_name:
+        detect_faces(image_name)  # Use facial analysis for the faces.jpg image
+    
+    if 'text' in image_name:
+        detect_text(image_name)  # Use text extraction for the text.jpg image
+```
+A detailed explanation is provided as comments in the code block above.
+1. rekognition.detect_labels()
+- Purpose: This function is used to detect objects, scenes, and concepts in an image. AWS Rekognition applies machine learning models to recognise and label entities such as animals, vehicles, buildings, people, or landscapes.
+
+- How it works: It sends the image (stored in S3) to Rekognition for analysis.
+Rekognition returns a list of labels (e.g., "Dog", "Car", "Tree") along with confidence scores (a percentage indicating how confident Rekognition is about each label).
+
+- Parameters:
+  - Image: This specifies the S3 bucket and the name of the image file that you want to analyze.
+  - MaxLabels: The maximum number of labels you want to return (in this case, 10).
+  
+2. rekognition.detect_moderation_labels()
+- Purpose: This function is used to detect inappropriate or unsafe content in an image, such as nudity, violence, or other sensitive material. AWS Rekognition uses predefined moderation labels to help filter out potentially unsafe or inappropriate images.
+  
+- How it works:
+The image is sent to AWS Rekognition, and it checks whether the image contains any content that might be considered inappropriate or unsuitable for certain audiences.
+It returns a list of moderation labels (e.g., "Explicit Nudity", "Violence", etc.) along with confidence scores for each label.
+
+- Parameters:
+    - Image: Specifies the S3 bucket and the name of the image file for moderation analysis.
+
+3. rekognition.detect_faces()
+- Purpose: This function is used for facial analysis. It detects faces in an image and provides information about detected faces, such as age range, gender, emotions (e.g., happy, sad), and facial features (e.g., smile, glasses).
+
+- How it works:
+It processes the image to find all the faces present.
+For each detected face, Rekognition provides details about facial characteristics and emotions, along with confidence scores.
+
+- Parameters:
+  - Image: Specifies the S3 bucket and the name of the image file for facial analysis.
+  - Attributes: By setting Attributes=['ALL'], the function will return detailed information, including emotions, age range, gender, and other features.
+
+4. rekognition.detect_text()
+- Purpose: This function detects and extracts text from images. AWS Rekognition is capable of detecting printed and handwritten text in images and can return it in both line and word formats.
+
+- How it works:
+It analyzes the image to find any text and returns the text along with its position in the image.
+It can extract both large amounts of text (like paragraphs) or individual characters and words.
+
+- Parameters:
+  - Image: Specifies the S3 bucket and the name of the image file for text detection.
+
+#### Results
+Tested label recognition, image moderation, facial analysis and text extraction.
+```
+mila@DESKTOP-N95AEOP:~/lab9$ python3 test_rekognition.py
+
+--- Analyzing images/urban.jpg ---
+
+Labels detected in images/urban.jpg:
+City - 100.00%
+Building - 100.00%
+Office Building - 100.00%
+Urban - 100.00%
+High Rise - 99.69%
+Cityscape - 98.27%
+Tower - 96.64%
+Metropolis - 86.41%
+Skyscraper - 62.49%
+Condo - 56.29%
+
+Moderation labels detected in images/urban.jpg:
+No inappropriate content detected.
+
+--- Analyzing images/beach.jpg ---
+
+Labels detected in images/beach.jpg:
+Person - 99.15%
+Footprint - 96.84%
+Walking - 74.87%
+Clothing - 60.30%
+Shorts - 60.30%
+Beach - 57.08%
+Sea - 57.08%
+Shoreline - 57.08%
+Water - 57.08%
+Soil - 56.54%
+
+Moderation labels detected in images/beach.jpg:
+No inappropriate content detected.
+
+--- Analyzing images/faces.jpg ---
+
+Labels detected in images/faces.jpg:
+Finger - 100.00%
+Person - 100.00%
+Face - 99.99%
+Head - 99.99%
+Smile - 99.99%
+People - 99.68%
+Adult - 99.45%
+Female - 99.45%
+Woman - 99.45%
+Glasses - 99.42%
+
+Moderation labels detected in images/faces.jpg:
+No inappropriate content detected.
+
+Facial analysis for images/faces.jpg:
+Face detected with emotions: HAPPY
+Gender: Male
+Age range: 52 - 58
+Face detected with emotions: HAPPY
+Gender: Female
+Age range: 44 - 52
+Face detected with emotions: HAPPY
+Gender: Male
+Age range: 21 - 27
+
+--- Analyzing images/text.jpg ---
+
+Labels detected in images/text.jpg:
+Text - 95.60%
+City - 77.19%
+Outdoors - 63.17%
+Alphabet - 60.03%
+People - 57.83%
+Symbol - 57.63%
+Snow - 57.33%
+Number - 57.00%
+Logo - 56.17%
+Ampersand - 55.94%
+
+Moderation labels detected in images/text.jpg:
+No inappropriate content detected.
+
+Text detected in images/text.jpg:
+Detected text: This is a test image.
+```
+
