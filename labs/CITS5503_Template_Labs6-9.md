@@ -1792,3 +1792,235 @@ Detected key noun phrases:
 ![alt text](image-95.png)
 
 ### Detect syntaxes
+I used the below Python script to detect syntaxes of the previous four texts.
+
+**Answer this question** - describe what syntaxes are in your own words:
+Syntaxes are the rules of how words are arranged to form sentences. It is about the structure of sentences and determines how different parts of speech, e.g. nouns, verbs and adjectives combine to convey clear messages. For example, in the sentence "The cat is cute", "cat" is the subject, "is" is the verb, "cute" is the adjective. This sentence follows the basic structure "subject + linking verb + predicate adjective".
+
+#### Python script `detect_syntaxes.py`
+```python
+import boto3
+
+# Create a client to interact with AWS Comprehend
+client = boto3.client('comprehend')
+
+# Function to detect syntaxes in a given text in a specific language
+def detect_syntaxes(text, language_code):
+    response = client.detect_syntax(Text=text, LanguageCode=language_code)
+    syntaxes = response['SyntaxTokens']
+    
+    # Print the first 60 characters of the text to provide context in the output
+    print(f"Text: {text[:60]}...")
+    
+    # Print each syntax token detected in the text
+    for syntax in syntaxes:
+        print(f"Token: {syntax['Text']}, Part of Speech: {syntax['PartOfSpeech']['Tag']}, Confidence: {syntax['PartOfSpeech']['Score']:.2f}")
+    
+    print('-' * 80)
+    return response
+
+def main():
+    # Sample texts in different languages, each with an associated language code
+    texts = [
+        {"text": "The French Revolution was a period of social and political upheaval in France and its colonies beginning in 1789 and ending in 1799.", "language": "en"},
+        {"text": "El Quijote es la obra más conocida de Miguel de Cervantes Saavedra. Publicada su primera parte con el título de El ingenioso hidalgo don Quijote de la Mancha a comienzos de 1605, es una de las obras más destacadas de la literatura española y la literatura universal, y una de las más traducidas. En 1615 aparecería la segunda parte del Quijote de Cervantes con el título de El ingenioso caballero don Quijote de la Mancha.", "language": "es"},
+        {"text": "Moi je n'étais rien Et voilà qu'aujourd'hui Je suis le gardien Du sommeil de ses nuits Je l'aime à mourir Vous pouvez détruire Tout ce qu'il vous plaira Elle n'a qu'à ouvrir L'espace de ses bras Pour tout reconstruire Pour tout reconstruire Je l'aime à mourir", "language": "fr"},
+        {"text": "L'amor che move il sole e l'altre stelle.", "language": "it"}
+    ]
+
+    # Loop through each text and detect its key phrases
+    for instance in texts:
+        detect_syntaxes(instance["text"], instance["language"])
+
+if __name__ == "__main__":
+    main()
+```
+- `client.detect_syntax()`: This function is part of the AWS Comprehend service and is used to analyse text and identify its syntactic structure. Specifically, it detects and categorises the parts of speech (POS) in the input text, such as nouns, verbs, adjectives, etc., for each word or token in the provided text. This function helps in understanding the grammatical relationships between words in sentences.
+- A detailed explanation of the code is provided as comments above.
+
+#### Results
+Detected syntaxes for the texts.
+```
+Text: The French Revolution was a period of social and political u...
+Token: The, Part of Speech: DET, Confidence: 1.00
+Token: French, Part of Speech: PROPN, Confidence: 1.00
+Token: Revolution, Part of Speech: PROPN, Confidence: 1.00
+Token: was, Part of Speech: VERB, Confidence: 1.00
+Token: a, Part of Speech: DET, Confidence: 1.00
+Token: period, Part of Speech: NOUN, Confidence: 1.00
+Token: of, Part of Speech: ADP, Confidence: 1.00
+Token: social, Part of Speech: ADJ, Confidence: 1.00
+Token: and, Part of Speech: CCONJ, Confidence: 1.00
+Token: political, Part of Speech: ADJ, Confidence: 1.00
+Token: upheaval, Part of Speech: NOUN, Confidence: 1.00
+Token: in, Part of Speech: ADP, Confidence: 1.00
+Token: France, Part of Speech: PROPN, Confidence: 1.00
+Token: and, Part of Speech: CCONJ, Confidence: 1.00
+Token: its, Part of Speech: PRON, Confidence: 1.00
+Token: colonies, Part of Speech: NOUN, Confidence: 1.00
+Token: beginning, Part of Speech: VERB, Confidence: 1.00
+Token: in, Part of Speech: ADP, Confidence: 1.00
+Token: 1789, Part of Speech: NUM, Confidence: 1.00
+Token: and, Part of Speech: CCONJ, Confidence: 1.00
+Token: ending, Part of Speech: VERB, Confidence: 1.00
+Token: in, Part of Speech: ADP, Confidence: 1.00
+Token: 1799, Part of Speech: NUM, Confidence: 1.00
+Token: ., Part of Speech: PUNCT, Confidence: 1.00
+--------------------------------------------------------------------------------
+Text: El Quijote es la obra más conocida de Miguel de Cervantes Sa...
+Token: El, Part of Speech: DET, Confidence: 1.00
+Token: Quijote, Part of Speech: PROPN, Confidence: 1.00
+Token: es, Part of Speech: VERB, Confidence: 1.00
+Token: la, Part of Speech: DET, Confidence: 1.00
+Token: obra, Part of Speech: NOUN, Confidence: 1.00
+Token: más, Part of Speech: ADV, Confidence: 1.00
+Token: conocida, Part of Speech: ADJ, Confidence: 0.69
+Token: de, Part of Speech: ADP, Confidence: 1.00
+Token: Miguel, Part of Speech: PROPN, Confidence: 1.00
+Token: de, Part of Speech: ADP, Confidence: 1.00
+Token: Cervantes, Part of Speech: PROPN, Confidence: 1.00
+Token: Saavedra, Part of Speech: PROPN, Confidence: 1.00
+Token: ., Part of Speech: PUNCT, Confidence: 1.00
+Token: Publicada, Part of Speech: VERB, Confidence: 1.00
+Token: su, Part of Speech: DET, Confidence: 1.00
+Token: primera, Part of Speech: ADJ, Confidence: 1.00
+Token: parte, Part of Speech: NOUN, Confidence: 1.00
+Token: con, Part of Speech: ADP, Confidence: 1.00
+Token: el, Part of Speech: DET, Confidence: 1.00
+Token: título, Part of Speech: NOUN, Confidence: 1.00
+Token: de, Part of Speech: ADP, Confidence: 1.00
+Token: El, Part of Speech: DET, Confidence: 1.00
+Token: ingenioso, Part of Speech: PROPN, Confidence: 1.00
+Token: hidalgo, Part of Speech: PROPN, Confidence: 1.00
+Token: don, Part of Speech: PROPN, Confidence: 1.00
+Token: Quijote, Part of Speech: PROPN, Confidence: 1.00
+Token: de, Part of Speech: ADP, Confidence: 1.00
+Token: la, Part of Speech: DET, Confidence: 1.00
+Token: Mancha, Part of Speech: PROPN, Confidence: 1.00
+Token: a, Part of Speech: ADP, Confidence: 1.00
+Token: comienzos, Part of Speech: NOUN, Confidence: 1.00
+Token: de, Part of Speech: ADP, Confidence: 1.00
+Token: 1605, Part of Speech: NUM, Confidence: 1.00
+Token: ,, Part of Speech: PUNCT, Confidence: 1.00
+Token: es, Part of Speech: VERB, Confidence: 1.00
+Token: una, Part of Speech: PRON, Confidence: 1.00
+Token: de, Part of Speech: ADP, Confidence: 1.00
+Token: las, Part of Speech: DET, Confidence: 1.00
+Token: obras, Part of Speech: NOUN, Confidence: 1.00
+Token: más, Part of Speech: ADV, Confidence: 1.00
+Token: destacadas, Part of Speech: ADJ, Confidence: 1.00
+Token: de, Part of Speech: ADP, Confidence: 1.00
+Token: la, Part of Speech: DET, Confidence: 1.00
+Token: literatura, Part of Speech: NOUN, Confidence: 1.00
+Token: española, Part of Speech: ADJ, Confidence: 1.00
+Token: y, Part of Speech: CCONJ, Confidence: 1.00
+Token: la, Part of Speech: DET, Confidence: 1.00
+Token: literatura, Part of Speech: NOUN, Confidence: 1.00
+Token: universal, Part of Speech: ADJ, Confidence: 1.00
+Token: ,, Part of Speech: PUNCT, Confidence: 1.00
+Token: y, Part of Speech: CCONJ, Confidence: 1.00
+Token: una, Part of Speech: PRON, Confidence: 1.00
+Token: de, Part of Speech: ADP, Confidence: 1.00
+Token: las, Part of Speech: DET, Confidence: 0.96
+Token: más, Part of Speech: ADV, Confidence: 1.00
+Token: traducidas, Part of Speech: VERB, Confidence: 0.58
+Token: ., Part of Speech: PUNCT, Confidence: 1.00
+Token: En, Part of Speech: ADP, Confidence: 1.00
+Token: 1615, Part of Speech: NUM, Confidence: 1.00
+Token: aparecería, Part of Speech: VERB, Confidence: 1.00
+Token: la, Part of Speech: DET, Confidence: 1.00
+Token: segunda, Part of Speech: ADJ, Confidence: 1.00
+Token: parte, Part of Speech: NOUN, Confidence: 1.00
+Token: del, Part of Speech: ADP, Confidence: 1.00
+Token: Quijote, Part of Speech: PROPN, Confidence: 1.00
+Token: de, Part of Speech: ADP, Confidence: 1.00
+Token: Cervantes, Part of Speech: PROPN, Confidence: 1.00
+Token: con, Part of Speech: ADP, Confidence: 1.00
+Token: el, Part of Speech: DET, Confidence: 1.00
+Token: título, Part of Speech: NOUN, Confidence: 1.00
+Token: de, Part of Speech: ADP, Confidence: 1.00
+Token: El, Part of Speech: DET, Confidence: 1.00
+Token: ingenioso, Part of Speech: PROPN, Confidence: 0.98
+Token: caballero, Part of Speech: PROPN, Confidence: 1.00
+Token: don, Part of Speech: PROPN, Confidence: 1.00
+Token: Quijote, Part of Speech: PROPN, Confidence: 1.00
+Token: de, Part of Speech: ADP, Confidence: 1.00
+Token: la, Part of Speech: DET, Confidence: 1.00
+Token: Mancha, Part of Speech: PROPN, Confidence: 1.00
+Token: ., Part of Speech: PUNCT, Confidence: 1.00
+--------------------------------------------------------------------------------
+Text: Moi je n'étais rien Et voilà qu'aujourd'hui Je suis le gardi...
+Token: Moi, Part of Speech: PRON, Confidence: 1.00
+Token: je, Part of Speech: PRON, Confidence: 1.00
+Token: n', Part of Speech: ADV, Confidence: 1.00
+Token: étais, Part of Speech: AUX, Confidence: 1.00
+Token: rien, Part of Speech: PRON, Confidence: 1.00
+Token: Et, Part of Speech: CCONJ, Confidence: 1.00
+Token: voilà, Part of Speech: VERB, Confidence: 1.00
+Token: qu', Part of Speech: SCONJ, Confidence: 1.00
+Token: aujourd'hui, Part of Speech: NOUN, Confidence: 1.00
+Token: Je, Part of Speech: PRON, Confidence: 1.00
+Token: suis, Part of Speech: AUX, Confidence: 1.00
+Token: le, Part of Speech: DET, Confidence: 1.00
+Token: gardien, Part of Speech: NOUN, Confidence: 1.00
+Token: Du, Part of Speech: ADP, Confidence: 1.00
+Token: sommeil, Part of Speech: NOUN, Confidence: 1.00
+Token: de, Part of Speech: ADP, Confidence: 1.00
+Token: ses, Part of Speech: DET, Confidence: 0.99
+Token: nuits, Part of Speech: NOUN, Confidence: 1.00
+Token: Je, Part of Speech: PRON, Confidence: 1.00
+Token: l', Part of Speech: PRON, Confidence: 1.00
+Token: aime, Part of Speech: VERB, Confidence: 1.00
+Token: à, Part of Speech: ADP, Confidence: 1.00
+Token: mourir, Part of Speech: VERB, Confidence: 1.00
+Token: Vous, Part of Speech: PRON, Confidence: 1.00
+Token: pouvez, Part of Speech: VERB, Confidence: 1.00
+Token: détruire, Part of Speech: VERB, Confidence: 1.00
+Token: Tout, Part of Speech: DET, Confidence: 0.92
+Token: ce, Part of Speech: PRON, Confidence: 0.99
+Token: qu', Part of Speech: PRON, Confidence: 1.00
+Token: il, Part of Speech: PRON, Confidence: 1.00
+Token: vous, Part of Speech: PRON, Confidence: 1.00
+Token: plaira, Part of Speech: VERB, Confidence: 1.00
+Token: Elle, Part of Speech: PRON, Confidence: 1.00
+Token: n', Part of Speech: ADV, Confidence: 1.00
+Token: a, Part of Speech: VERB, Confidence: 1.00
+Token: qu', Part of Speech: SCONJ, Confidence: 0.71
+Token: à, Part of Speech: ADP, Confidence: 1.00
+Token: ouvrir, Part of Speech: VERB, Confidence: 1.00
+Token: L', Part of Speech: DET, Confidence: 1.00
+Token: espace, Part of Speech: NOUN, Confidence: 1.00
+Token: de, Part of Speech: ADP, Confidence: 1.00
+Token: ses, Part of Speech: DET, Confidence: 0.99
+Token: bras, Part of Speech: NOUN, Confidence: 1.00
+Token: Pour, Part of Speech: ADP, Confidence: 1.00
+Token: tout, Part of Speech: PRON, Confidence: 1.00
+Token: reconstruire, Part of Speech: VERB, Confidence: 1.00
+Token: Pour, Part of Speech: ADP, Confidence: 1.00
+Token: tout, Part of Speech: PRON, Confidence: 1.00
+Token: reconstruire, Part of Speech: VERB, Confidence: 1.00
+Token: Je, Part of Speech: PRON, Confidence: 1.00
+Token: l', Part of Speech: PRON, Confidence: 1.00
+Token: aime, Part of Speech: VERB, Confidence: 1.00
+Token: à, Part of Speech: ADP, Confidence: 1.00
+Token: mourir, Part of Speech: VERB, Confidence: 1.00
+--------------------------------------------------------------------------------
+Text: L'amor che move il sole e l'altre stelle....
+Token: L', Part of Speech: DET, Confidence: 1.00
+Token: amor, Part of Speech: NOUN, Confidence: 1.00
+Token: che, Part of Speech: PRON, Confidence: 1.00
+Token: move, Part of Speech: VERB, Confidence: 1.00
+Token: il, Part of Speech: DET, Confidence: 1.00
+Token: sole, Part of Speech: NOUN, Confidence: 1.00
+Token: e, Part of Speech: CCONJ, Confidence: 1.00
+Token: l', Part of Speech: DET, Confidence: 1.00
+Token: altre, Part of Speech: ADJ, Confidence: 1.00
+Token: stelle, Part of Speech: NOUN, Confidence: 1.00
+Token: ., Part of Speech: PUNCT, Confidence: 1.00
+--------------------------------------------------------------------------------
+```
+
+## AWS Rekognition
+### Add images
+
+### Test AWS rekognition
