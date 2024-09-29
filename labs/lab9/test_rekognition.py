@@ -43,6 +43,9 @@ def detect_faces(image):
         print(f"Face detected with emotions: {emotions}")
         print(f"Gender: {face['Gender']['Value']}")
         print(f"Age range: {face['AgeRange']['Low']} - {face['AgeRange']['High']}")
+        print(f"Glasses: {face['Eyeglasses']['Value']}")
+        print(f"Smile: {face['Smile']['Value']}")
+        print(f"Beard: {face['Beard']['Value']}")
 
 # Function to detect and extract text from the image
 def detect_text(image):

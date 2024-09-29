@@ -2150,6 +2150,9 @@ def detect_faces(image):
         print(f"Face detected with emotions: {emotions}")
         print(f"Gender: {face['Gender']['Value']}")
         print(f"Age range: {face['AgeRange']['Low']} - {face['AgeRange']['High']}")
+        print(f"Glasses: {face['Eyeglasses']['Value']}")
+        print(f"Smile: {face['Smile']['Value']}")
+        print(f"Beard: {face['Beard']['Value']}")
 
 # Function to detect and extract text from the image
 def detect_text(image):
@@ -2279,12 +2282,21 @@ Facial analysis for images/faces.jpg:
 Face detected with emotions: HAPPY
 Gender: Male
 Age range: 52 - 58
+Glasses: False
+Smile: True
+Beard: False
 Face detected with emotions: HAPPY
 Gender: Female
 Age range: 44 - 52
+Glasses: True
+Smile: True
+Beard: False
 Face detected with emotions: HAPPY
 Gender: Male
 Age range: 21 - 27
+Glasses: False
+Smile: True
+Beard: True
 
 --- Analyzing images/text.jpg ---
 
