@@ -292,7 +292,7 @@ I accessed each instance by their IP addresses in the Chrome browser. Their inst
 
 # AI/SageMaker (Lab 8) 
 Steps for using SageMaker:
-- install libraries for running jupyter notebooks and trining
+- install libraries for running jupyter notebooks and training
   - install and run jupyter notebooks
   - install ipykernel for jupyter to run python code
   - install libraries for training: sagemaker, pandas, numpy
@@ -304,7 +304,7 @@ Steps for using SageMaker:
    - split into training, validation and test dataset
    - upload train and validation datasets to S3 bucket
 - set up name and configuration (hyperparameters ranges, tuning strategy, total number of training jobs, max number of parallel jobs, metrics used for tuning) for the tuning job
-- specify the machine learning algorithm used for tuning job (retrieve training image, specify S3 paths for datasets, define input data for training and validation channels, specify output location, define compute resources, specify IAM role, static hyperparameters for the algorithm, stopping condition)
+- specify the machine learning algorithm used for tuning job (retrieve training image, specify S3 paths for datasets, define input data for training and validation channels, specify output location, define compute resou1rces, specify IAM role, static hyperparameters for the algorithm, stopping condition)
 - launch the tuning job 
 
 ## Install and run jupyter notebooks
@@ -748,58 +748,6 @@ if __name__ == "__main__":
     main()
 ```
 
-A detailed explanation is provided as comments in the above code block.
-
-##### Results
-
-Installed `pycountry`.
-
-```
-Defaulting to user installation because normal site-packages is not writeable
-Collecting pycountry
-  Downloading pycountry-24.6.1-py3-none-any.whl (6.3 MB)
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 2.8 MB/s eta 0:00:00
-Installing collected packages: pycountry
-Successfully installed pycountry-24.6.1
-```
-
-![alt text](image-92.png)
-
-#### [2] Test the code with other languages
-
-I tested the code for the language detection task by including other texts in the `main()` function as follows.
-
-##### Python code
-
-```python
-# Main function that detects the language of several text samples
-def main():
-    # Detect and print the language of the first text (in English)
-    print("Detecting language of the text1:")
-    english_text = "The French Revolution was a period of social and political upheaval in France and its colonies beginning in 1789 and ending in 1799."
-    detect_language(english_text)  # Call a function to detect the language of the English text
-
-    # Detect and print the language of the second text (in Spanish)
-    print("Detecting language of the text2:")
-    spanish_text = "El Quijote es la obra más conocida de Miguel de Cervantes Saavedra. Publicada su primera parte con el título de El ingenioso hidalgo don Quijote de la Mancha a comienzos de 1605, es una de las obras más destacadas de la literatura española y la literatura universal, y una de las más traducidas. En 1615 aparecería la segunda parte del Quijote de Cervantes con el título de El ingenioso caballero don Quijote de la Mancha."
-    detect_language(spanish_text)  # Call a function to detect the language of the Spanish text
-
-    # Detect and print the language of the third text (in French)
-    print("Detecting language of the text3:")
-    french_text = "Moi je n'étais rien Et voilà qu'aujourd'hui Je suis le gardien Du sommeil de ses nuits Je l'aime à mourir Vous pouvez détruire Tout ce qu'il vous plaira Elle n'a qu'à ouvrir L'espace de ses bras Pour tout reconstruire Pour tout reconstruire Je l'aime à mourir"
-    detect_language(french_text)  # Call a function to detect the language of the French text
-
-    # Detect and print the language of the fourth text (in Italian)
-    print("Detecting language of the text4:")
-    italian_text = "L'amor che move il sole e l'altre stelle."
-    detect_language(italian_text)  # Call a function to detect the language of the Italian text
-```
-
-##### Results
-
-Detected different languages of other texts.
-![alt text](image-91.png)
-
 ### Analyze sentiment
 
 I used the below Python script for sentiment analysis and tested the code on the previous 4 texts.
@@ -856,12 +804,6 @@ if __name__ == "__main__":
     main()  # Call the main function to process the texts
 ```
 
-A detailed explanaiton is provided as comments in the above code block.
-
-#### Results
-
-Detected sentiment for the previous 4 texts.
-![alt text](image-93.png)
 
 ### Detect entities
 
@@ -909,13 +851,6 @@ def main():
 if __name__ == "__main__":
     main()
 ```
-
-A detailed explanations is provided in the code block as comments.
-
-#### Results
-
-Detected entities as follows:
-![alt text](image-94.png)
 
 ### Detect keyphrases
 
