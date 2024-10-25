@@ -25,25 +25,6 @@ XaaS cloud computing:
 
 ## **DevOps, Security, Networking**
 
-**[20] [10 points] What is DevOps and describe how you would implement the automation of creation of machines, configuration of software and deployment of application programs using AWS.**
-
-What is DevOps:
-
-1. Creating automation for the entire build/test/release cycle.
-2. Allows Development, Test and Production environments to be built, tested and deployed easily and systematically,
-3. Allows new components to be added automatically,
-4. It Could be done manually with the help of scripts but there are software environments that manage remote communication and execution of resource creation, software installation and configuration.
-
-How to implement:
-
-1. Using fabric to connect to an SSH server and executing commands remotely.
-2. Using the version control tool AWS CodeCommit to maintain changes in the source code.
-3. Using AWS CodePipeline to perform Continuous Integration/Continuous Delivery (CI & CD) service for updating code.
-4. Using AWS CodeBuild to compile source code, run tests, and produce software packages.
-5. Using AWS CodeDeploy to test and deploy new code.
-6. Using AWS Chef to manage machines. stacks, layers and applications can be established.
-
-- A layer with a recipe specifies one category of software. Edit our own chef recipe. In the instance interface, we can manage EC2 instances for the particular layer. EC2 will install and configure software according to chef recipe after it starts.
 
 **[18] [10 Points] Describe 2 ways in which security is implemented in AWS networks at the network level. What are the similarities and differences between these 2 security implementations?**
 
@@ -65,54 +46,7 @@ Network ACLs: it allows or denies specific traffic to reach and leave the resour
 
 ![image](sg-nacl.png)
 
-## **AWS machine learning**
-
-- Underfitting: model is too “simple” to represent all the relevant class characteristics
-  - High bias and low variance
-  - High training error and high test error
-- Overfitting: model is too “complex” and fits irrelevant characteristics (noise) in the data
-  - Low bias and high variance
-  - Low training error and high test error
-
-**[21] [10 points] Describe the 3 different types of Machine Learning Models that AWS Machine Learning allows you to use and describe examples of the types of questions you could answer with each one.**
-
-https://docs.aws.amazon.com/machine-learning/latest/dg/types-of-ml-models.html
-
-**Binary Classification Model**
-
-"Is this email spam or not spam?"
-
-"Will the customer buy this product?"
-
-"Is this product a book or a farm animal?"
-
-"Is this review written by a customer or a robot?"
-
-**Multiclass Classification Model**
-
-"Is this product a book, movie, or clothing?"
-
-"Is this movie a romantic comedy, documentary, or thriller?"
-
-"Which category of products is most interesting to this customer?"
-
-**Regression Model**
-
-"What will the temperature be in Seattle tomorrow?"
-
-"For this product, how many units will sell?"
-
-"What price will this house sell for?"
-
-**[a] [15 points] You have been asked to create a project plan for the new machine learning model your company has asked you to build. List the main tasks and sub-tasks you would need to complete to create the model on AWS.**
-
-1. collecting labeled data and setup a target variable and a list of feature variables.
-2. preprocess the data by performing data cleaning, feature scaling, data transformation.
-3. analysing the correlations between variables.
-4. splitting data into training (80%) and testing (20%) sets.
-5. selecting a machine learning model.
-6. training the model using training set and tuning hyperparameters.
-7. evaluate the trained model (run on test data, or use metric to validate, validation metrics including MAE, RMSE and MSE since this have to be regression model )
+-
 
 ## **Storage, Database in AWS**
 

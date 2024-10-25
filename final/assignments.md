@@ -2,13 +2,13 @@
 
 Exam topic:
 
-•Networking (Week 7)
+~~•Networking (Week 7)~~
 
-•IAM (Week 5)
+~~•IAM (Week 5)~~
 
-•Miscellaneous (Week5 + Week 7 + Lab 5)
+~~•Miscellaneous (Week5 + Week 7 + Lab 5)~~
 
-•AI (Week 8 + Labs 8&9)
+~~•AI (Week 8 + Labs 8&9)~~
 
 •**DevOps (Week 10 + Lab 7)**
 
@@ -110,83 +110,166 @@ Principles to consider:
 
 **When an EC2 instance is created in AWS, it is assigned to a region and a Virtual Private Cloud (VPC). Describe how network addresses are allocated to a VPC and sub-networked when an EC2 instance is created. How is the EC2 connected to other machines and to the Internet?**
 
-`The number after the slash indicates how many ones are in the subnet mask`
+How network addresses are allocated to a VPC:
 
-`IP addr = network addr + host addr`
+* Assign the VPC a CIDR block , such as `10.0.0.0/16 (65,536 IP addresses)`, which defines the *IP address range* for all resources within the VPC.
+* This CIDR block is then divided into subnets.
 
-`The network address is used to find the subnet in which the computer or the device is located`
+How sub-networked when an EC2 instance is created:
 
-`The host address is used to find the computer or the device in the subnet`
+* **Subnets** are created within a VPC, each assigned a specific portion of the VPC's IP range. For example, a VPC with a CIDR block of `10.0.0.0/16` could have subnets like:
 
-how network addresses are allocated to a VPC:
+  * `10.0.1.0/24` for one subnet (providing 256 addresses),
+  * `10.0.2.0/24` for another subnet, and so forth.
+* Subnets can be designated as **public** or  **private** :
 
-an address space (IPv4 and IPv6) with size /16 is allocated to a VPC: 172.31.0.0/16 (65536 addresses)
+  * **Public Subnets** : Have Internet access via an  **Internet Gateway (IGW)** .
+  * **Private Subnets** : No direct Internet access; use **NAT Gateway** for outbound connectivity if needed.
+* (IP allocation) When an EC2 instance is launched within a subnet, it is assigned:
 
-how sub-networked when an EC2 instance is created:
+  * **Private IP** : Each EC2 instance gets a private IP within its subnet.
+  * **Public IP** : Optionally assigned in a public subnet for Internet access; static **Elastic IP** can be used for consistent access.
 
-a size /20 default subnet is networked in each availability zone (4096 addresses).
+To connect to other machines:
 
-In this case:
+* **Route Tables** : Each subnet is associated with a route table that defines the traffic flow rules. Route tables have entries specifying how packets are routed within the VPC, between subnets, and externally.
+* **Security Groups and Network ACLs** : Both **Security Groups** (instance-level firewall) and **Network Access Control Lists (NACLs)** (subnet-level firewall) define access rules for inbound and outbound traffic.
 
-- a primary private IP address in the network address range is assigned to the default network interface (eth0) of the EC2 instance.
-- a private DNS hostname that resolves to the private subnet range is given to the EC2 instance.
-- a public IP address will be allocated to the EC2 instance.
-
-Default VPC defines:
-
-- An address space (IPv4 and IPv6): 172.31.0.0/16 (65,536 addresses)
-- Subnet in each availability zone: e.g. 172.31.0.0/20 and 172.31.16.0/20
-- Internet Gateway
-- Main Route Table
-- Default Security Group
-- Default Network Access Control List (NACL)
-- Default DHCP settings
-
-To connect to other machines and to the internet:
-
-access the main route table to know the reachable addresses of other machines in the VPC.
+Access the main **route table** to know the reachable addresses of other machines in the VPC.
 
 - if address is in local VPC, it can connect directly or through the router if the machine is in a different subnet.
 - if address is not in local VPC, it can connect through the internet gateway according to NACLs.
 
-ssh client:
+To connect to other networks:
 
-1. generating the private and public keys for applying SSH client.
-2. using AWS CLI command to authorize the user and push the public key to the instance.
-3. connect to the instance using the associated private key after authentication.
+* **Internet Gateway (IGW)** : Provides public Internet access for instances in public subnets.
+* **NAT Gateway** : Enables private instances to access the Internet without direct exposure.
 
-## **Load balancing**
+
+**Describe 2 ways in which security is implemented in AWS networks at the network level. What are the similarities and differences between these 2 security implementations?**
+
+**Similarities**:
+
+* Both control **inbound and outbound traffic** and use IP addresses and port rules.
+* Both are components of AWS **VPC security** and provide an additional layer of network protection.
+
+**security group**: it controls the traffic that is allowed to reach and leave the resources at the instance level.
+
+1. support rules only.
+2. stateful: If an inbound request is allowed, the response is automatically allowed.
+3. instance-level
+
+Use Case : Commonly used for controlling access to individual instances, such as allowing SSH or HTTP access.
+
+**Network ACLs (network access control lists)**: it allows or denies specific traffic to reach and leave the resources at subnet level.
+
+1. support and deny rules.
+2. stateless: Each inbound and outbound rule must be explicitly defined; no automatic responses are allowed.
+3. subnet level
+
+Use Case : Used for broader control of subnet traffic, such as blocking specific IP ranges from accessing an entire subnet.
+
+## **ALB (load balancing) (needs improve))**
 
 **Discuss the reasons why you would use Application Load Balancing and how this would be set up to load balance a Python Django application. Specifically, describe the configuration of the Listener and Target Group running the Python Django application.**
 
-The steps to set up load balancer to Django application:
+Steps to set up load balancer to Django application:
 
-1. create security group.
-2. set up the Django application to instances.
+1. set up the Django application to instances.
+2. create and configure security group.
 3. create a load balancer by specifying name, IP address type, avilable zones.
 4. create target group.
-5. configuring the target group and the Listener: name, protocol (HTTP), port (80), action (forward to the created target group), and the path for health check.
+5. configuring the target group and the listener: name, protocol (HTTP), port (80), action (forward to the created target group), and the path for health check.
 6. register targets with the configured target group.
-7. deploy the services and check the healthy status of each target.
 
-## Week 8
+## ML/AI
 
-[16] Discuss the reasons why you would use Application Load Balancing and how this would be set up to load balance a Python Django application. Specifically, describe the configuration of the Listener and Target Group running the Python Django application.
+- Underfitting: model is too “simple” to represent all the relevant class characteristics
+  - High bias and low variance
+  - High training error and high test error
+- Overfitting: model is too “complex” and fits irrelevant characteristics (noise) in the data
+  - Low bias and high variance
+  - Low training error and high test error
 
-[17] Describe 2 ways in which security is implemented in AWS networks at the network level. What are the similarities and differences between these 2 security implementations?
+**Describe the 3 different types of Machine Learning Models that AWS Machine Learning allows you to use and describe examples of the types of questions you could answer with each one.**
 
-## Week 9
+https://docs.aws.amazon.com/machine-learning/latest/dg/types-of-ml-models.html
 
-[18] When an EC2 instance is created in AWS, it is assigned to a region and a Virtual Private Cloud (VPC). Describe how network addresses are allocated to a VPC and sub-networked when an EC2 instance is created. How is the EC2 connected to other machines and to the Internet?
+**Binary Classification Model**
 
-[19] What is DevOps and describe how you would implement the automation of creation of machines, configuration of software and deployment of application programs using AWS.
+"Is this email spam or not spam?"
 
-## Week 10
+"Will the customer buy this product?"
 
-[20] Describe the 3 different types of Machine Learning Models that AWS Machine Learning allows you to use and describe examples of the types of questions you could answer with each one.
+"Is this product a book or a farm animal?"
 
-[21] Describe the different ways in which a Microservice Architecture can be implemented on AWS and what the benefits of this approach might be. How could authentication and authorisation be handled in this approach?
+"Is this review written by a customer or a robot?"
 
-## Week 11
+**Multiclass Classification Model**
 
-[22] You have been asked to create a project plan for the new machine learning model your company has asked you to build. List the main tasks and sub-tasks you would need to complete to create the model on AWS. How would you measure the accuracy of the model you created?
+"Is this product a book, movie, or clothing?"
+
+"Is this movie a romantic comedy, documentary, or thriller?"
+
+"Which category of products is most interesting to this customer?"
+
+**Regression Model**
+
+"What will the temperature be in Seattle tomorrow?"
+
+"For this product, how many units will sell?"
+
+"What price will this house sell for?"
+
+**You have been asked to create a project plan for the new machine learning model your company has asked you to build. List the main tasks and sub-tasks you would need to complete to create the model on AWS. How would you measure the accuracy of the model you created?**
+
+- install libraries for running jupyter notebooks and training
+- prepare a sagemaker session:
+
+  - get the SageMaker execution role ARN
+  - create a S3 bucket for holding input and output
+- prepare dataset:
+
+  - collect labelled data and setup a target variable and a list of feature variables
+  - preprocess data (data cleaning, data transform, feature scaling: create categorical variables, convert categorical variables to dummy variables, drop columns, convert boolean columns to numeric)
+  - split into training, validation and test dataset
+  - upload train and validation datasets to S3 bucket
+- select a machine learning model
+- set up tuning job name and configuration (hyperparameters ranges, tuning strategy, total number of training jobs, max number of parallel jobs, metrics used for tuning)
+- specify the machine learning algorithm used for tuning job (retrieve training image, specify S3 paths for datasets, define input data for training and validation channels, specify output location, define compute resou1rces, specify IAM role, static hyperparameters for the algorithm, stopping condition)
+- launch the tuning job: train the model using training set and tuning hyperparameters using validation set
+- evaluated the model using test dataset, use metrics like AUC score, f1, precision, recall
+
+Using evaluation metrics to assess the accuracy of each model:
+
+- Binary classification – Accuracy, Precision, AUC
+- Multiclass classification – Precision, Recall, F1, AUC
+- Regression – RMSE, Accuracy
+
+## Architecture
+
+**Describe the different ways in which a Microservice Architecture can be implemented on AWS and what the benefits of this approach might be. How could authentication and authorisation be handled in this approach?**
+
+
+
+## DevOps
+
+**What is DevOps and describe how you would implement the automation of creation of machines, configuration of software and deployment of application programs using AWS.**
+
+What is DevOps:
+
+1. Creating automation for the entire build/test/release cycle,
+2. allows Development, Test and Production environments to be built, tested and deployed easily and systematically,
+3. Allows new components to be added automatically,
+4. Could be done manually with the help of scripts but there are software environments that manage remote communication and execution of resource creation, software installation and configuration.
+
+How to implement:
+
+1. Using fabric to connect to an SSH server and executing commands remotely.
+2. Using the version control tool AWS CodeCommit to maintain changes in the source code.
+3. Using AWS CodePipeline to perform Continuous Integration/Continuous Delivery (CI & CD) service for updating code.
+4. Using AWS CodeBuild to compile source code, run tests, and produce software packages.
+5. Using AWS CodeDeploy to test and deploy new code.
+6. Using AWS Chef to manage machines. stacks, layers and applications can be established.
+
+- A layer with a recipe specifies one category of software. Edit our own chef recipe. In the instance interface, we can manage EC2 instances for the particular layer. EC2 will install and configure software according to chef recipe after it starts.

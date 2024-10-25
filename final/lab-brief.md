@@ -1,6 +1,6 @@
+# Lab 5
 
-
-# AI/SageMaker (Lab 8) 
+# AI/SageMaker/Machine learning model (Lab 8) 
 Steps for using SageMaker:
 - install libraries for running jupyter notebooks and training
   - install and run jupyter notebooks
@@ -10,7 +10,7 @@ Steps for using SageMaker:
    - get the SageMaker execution role ARN
    - create a S3 bucket for holding input and output
 - prepare dataset:
-   - download, inspect, preprocess (transform, create categorical variables, convert categorical variables to dummy variables, drop columns, convert boolean columns to numeric)
+   - download, inspect, preprocess dataset (transform, create categorical variables, convert categorical variables to dummy variables, drop columns, convert boolean columns to numeric)
    - split into training, validation and test dataset
    - upload train and validation datasets to S3 bucket
 - set up name and configuration (hyperparameters ranges, tuning strategy, total number of training jobs, max number of parallel jobs, metrics used for tuning) for the tuning job
