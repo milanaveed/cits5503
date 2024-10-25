@@ -10,15 +10,15 @@ Exam topic:
 
 •AI (Week 8 + Labs 8&9)
 
-•DevOps (Week 10 + Lab 7)
+•**DevOps (Week 10 + Lab 7)**
 
 •Miscellaneous (Week7 + Week 9 + Lab 6)
 
-## IAM82
+**EC2 instance**: (short for Elastic Compute Cloud instance) is a AWS service that provides scalable computing capacity in the cloud.
 
-### Question
+## IAM
 
-[13] An organisation has 5 departments and has separated out each of the IAM users into separate groups using paths following the pattern companybucket/department1/*, companybucket /department2/*, companybucket/department3/* etc.
+**An organisation has 5 departments and has separated out each of the IAM users into separate groups using paths following the pattern companybucket/department1/*, companybucket /department2/*, companybucket/department3/* etc.
 
 Their IAM account names follow the pattern user@department1.company.com, user@department2.company.com etc.
 
@@ -26,11 +26,7 @@ You are tasked with securing a bucket that contains a folder for each of 5 depar
 
 Discuss the principles that you would use to create a policy that would achieve this objective.
 
-Write the policy as a JSON file that you would use.
-
-Note: you can have individual statements for each department.
-
-### Answer
+Write the policy as a JSON file that you would use.**
 
 Principles to consider:
 
@@ -109,6 +105,69 @@ Principles to consider:
 }
 
 ```
+
+## Network
+
+**When an EC2 instance is created in AWS, it is assigned to a region and a Virtual Private Cloud (VPC). Describe how network addresses are allocated to a VPC and sub-networked when an EC2 instance is created. How is the EC2 connected to other machines and to the Internet?**
+
+`The number after the slash indicates how many ones are in the subnet mask`
+
+`IP addr = network addr + host addr`
+
+`The network address is used to find the subnet in which the computer or the device is located`
+
+`The host address is used to find the computer or the device in the subnet`
+
+how network addresses are allocated to a VPC:
+
+an address space (IPv4 and IPv6) with size /16 is allocated to a VPC: 172.31.0.0/16 (65536 addresses)
+
+how sub-networked when an EC2 instance is created:
+
+a size /20 default subnet is networked in each availability zone (4096 addresses).
+
+In this case:
+
+- a primary private IP address in the network address range is assigned to the default network interface (eth0) of the EC2 instance.
+- a private DNS hostname that resolves to the private subnet range is given to the EC2 instance.
+- a public IP address will be allocated to the EC2 instance.
+
+Default VPC defines:
+
+- An address space (IPv4 and IPv6): 172.31.0.0/16 (65,536 addresses)
+- Subnet in each availability zone: e.g. 172.31.0.0/20 and 172.31.16.0/20
+- Internet Gateway
+- Main Route Table
+- Default Security Group
+- Default Network Access Control List (NACL)
+- Default DHCP settings
+
+To connect to other machines and to the internet:
+
+access the main route table to know the reachable addresses of other machines in the VPC.
+
+- if address is in local VPC, it can connect directly or through the router if the machine is in a different subnet.
+- if address is not in local VPC, it can connect through the internet gateway according to NACLs.
+
+ssh client:
+
+1. generating the private and public keys for applying SSH client.
+2. using AWS CLI command to authorize the user and push the public key to the instance.
+3. connect to the instance using the associated private key after authentication.
+
+## **Load balancing**
+
+**Discuss the reasons why you would use Application Load Balancing and how this would be set up to load balance a Python Django application. Specifically, describe the configuration of the Listener and Target Group running the Python Django application.**
+
+The steps to set up load balancer to Django application:
+
+1. create security group.
+2. set up the Django application to instances.
+3. create a load balancer by specifying name, IP address type, avilable zones.
+4. create target group.
+5. configuring the target group and the Listener: name, protocol (HTTP), port (80), action (forward to the created target group), and the path for health check.
+6. register targets with the configured target group.
+7. deploy the services and check the healthy status of each target.
 
 ## Week 8
 
