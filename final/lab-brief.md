@@ -32,7 +32,7 @@
 10. create and configure listener by specifying load balancer arn, protocol, port, and action (forward HTTP requests to the target group)
 
 
-# Devops (lab 7)
+# Devops/Fabric (lab 7)
 **Use Fabric to automate the setup of a Python 3 virtual environment, nginx and a Django app within the EC2 instance we created**:
 1. create and configure a security group
 2. create an EC2 instance

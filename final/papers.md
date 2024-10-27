@@ -1,8 +1,8 @@
 ## 1. (20 points)
 
-The creative designers of a marketing and video editing company in Melbourne use a commercial web-based application for converting videos to different formats.  In addition, one of the  main advantages of this software is the ability to publish those videos in popular social media networks such as YouTube, Instagram, Twitter, etc. This allows the user to convert and edit a video and then publish the same video at the same time to all different social media that the user selects in the software. This is particularly useful for marketing campaigns were usually a video is published in different social media networks. In the past, before using that software they used to spend around 5-10 hours  to convert a single video to different formats, resolutions, etc. and upload them to all different social media. Now using this software this process is reduced to only 45mins to  1 hour. Since they started using this software, they have to pay a monthly subscription fee of 25.000 AUD per month or around 300.000 AUD per year regardless of the number of videos they process per year. Despite all the benefits from this software, the CTO of the company believes they should pay a software developer to replicate this web-based software instead of keep paying those high fees. While he knows building software is expensive, he also believes there must be a way of designing this new software to reduce the cost and make it profitable in the long term. You as a Software Developer and Cloud Computing expert are hired for this task.
+The creative designers of a marketing and video editing company in Melbourne use a commercial web-based application for converting videos to different formats.  In addition, one of the main advantages of this software is the ability to publish those videos in popular social media networks such as YouTube, Instagram, Twitter, etc. This allows the user to convert and edit a video and then publish the same video at the same time to all different social media that the user selects in the software. This is particularly useful for marketing campaigns were usually a video is published in different social media networks. In the past, before using that software they used to spend around 5-10 hours  to convert a single video to different formats, resolutions, etc. and upload them to all different social media. Now using this software this process is reduced to only 45mins to  1 hour. Since they started using this software, they have to pay a monthly subscription fee of 25.000 AUD per month or around 300.000 AUD per year regardless of the number of videos they process per year. Despite all the benefits from this software, the CTO of the company believes they should pay a software developer to replicate this web-based software instead of keep paying those high fees. While he knows building software is expensive, he also believes there must be a way of designing this new software to reduce the cost and make it profitable in the long term. You as a Software Developer and Cloud Computing expert are hired for this task.
 
-#### **1.1  (10 points) You initially think on using EC2 instances for processing. Briefly explain what other AWS technologies you would use to replicate the web-based software functionalities and what architecture you would use to satisfy the needs of the client using such technologies.**
+#### **~~1.1  (10 points) You initially think on using EC2 instances for processing. Briefly explain what other AWS technologies you would use to replicate the web-based software functionalities and what architecture you would use to satisfy the needs of the client using such technologies.~~**
 
 1. Using ec2 instances to host the web server. the process of publish videos into different social media platforms can be automated via ec2 instances.
 2. S3 bucket will be implemented to store the videos.
@@ -44,11 +44,11 @@ steps to build the model via sakemaker:
 2. Comparing the results of training and testing set under each evaluation metric to see if any overfitting issues exist,
 3. Comparing the results of the selected model and a single variable model under each evaluation metric to see if the selected model has a good performance.
 
-## 3. (10 points)
+## ~~3. (10 points)~~
 
 A  software  developer  wants  to  create  a  Drobox-like  application  for  Photographers  where  they  could seamlessly upload pictures from a local machine to the cloud and synchronise the data across multiple devices (Computer, Mobile Phones, etc.) for authenticated users. For every image uploaded by the users, she wants to save the metadata related to the file. Given the files uploaded by users are very important, she wants to allow restoring such files even if users delete the images on purpose. In addition, the software developer wants to automatically create labels for the uploaded images so they can perform searches of images based on the generated labels.
 
-#### **3 Describe your approach using AWS technologies to create that application.**
+#### **~~Describe your approach using AWS technologies to create that application.~~**
 
 1. using EC2 instances to host web services that provides REST API for processing user requests and interacting with other system components.
 2. using S3 buckets to store images uploaded by users.
@@ -61,7 +61,7 @@ A  software  developer  wants  to  create  a  Drobox-like  application  for  Pho
 
 A MedTech company in Perth has created a novel algorithm for detecting heart diseases from X-rays and CT scans  (medical  images)  using  machine  learning  and  computer  vision.  The  company  now  wants  to commercialise it as a Software-as-a-service (SaaS) product. Initially, this product should allow authorised radiologist working at the Royal Perth Hospital to upload such images. Then, once the algorithm can process the image (it could take a couple of minutes) it should retrieve the prediction.   The solution should be scalable so it can be used in other hospitals in the future.
 
-#### **Give 10 recommendations to the company on how they could use AWS to create this platform. Provide your answer as a list of bullet points.**
+#### **~~Give 10 recommendations to the company on how they could use AWS to create this platform. Provide your answer as a list of bullet points.~~**
 
 1. Applying serverless architecture AWS Lambda to reduce the cost and facilitate the need of developing SaaS product,
 2. Implementing autoscaling to improve the efficiency.
