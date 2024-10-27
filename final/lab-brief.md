@@ -24,7 +24,7 @@
 2. install virtual environment package, set up a virtual environment, activate the virtual environment
 3. install django, create a django project and create a django app
 4. install nginx and configure nginx, restart nginx
-5. edit views.py and urls.py
+5. edit Django files (views.py and urls.py)
 6. run the web server and access the app through the EC2 instance's public IP address
 7. create an ALB by specifying name, subnets, security group, scheme (internet-facing or internal), IP address type (IPv4 or dualstack).
 8. create and configure target group by specifying name, protocol to use (HTTP), port to forward traffic (80), vpc id, port to use for health check, health check interval, health check path, target type.
@@ -41,7 +41,7 @@
 5. install virtual environment package, set up a virtual environment, activate the virtual environment
 6. install django, create a django project and create a django app
 7. install nginx and configure nginx, restart nginx
-8. edit views.py and urls.py
+8. edit Django files (views.py and urls.py)
 9. run the web server and access the app through the EC2 instance's public IP address
 
 
