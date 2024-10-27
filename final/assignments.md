@@ -145,7 +145,6 @@ To connect to other networks:
 * **Internet Gateway (IGW)** : Provides public Internet access for instances in public subnets.
 * **NAT Gateway** : Enables private instances to access the Internet without direct exposure.
 
-
 **Describe 2 ways in which security is implemented in AWS networks at the network level. What are the similarities and differences between these 2 security implementations?**
 
 **Similarities**:
@@ -169,7 +168,7 @@ Use Case : Commonly used for controlling access to individual instances, such as
 
 Use Case : Used for broader control of subnet traffic, such as blocking specific IP ranges from accessing an entire subnet.
 
-## **ALB (load balancing) (needs improve))**
+## **ALB (load balancing)**
 
 **Discuss the reasons why you would use Application Load Balancing and how this would be set up to load balance a Python Django application. Specifically, describe the configuration of the Listener and Target Group running the Python Django application.**
 
@@ -221,9 +220,9 @@ https://docs.aws.amazon.com/machine-learning/latest/dg/types-of-ml-models.html
 
 "What price will this house sell for?"
 
-**You have been asked to create a project plan for the new machine learning model your company has asked you to build. List the main tasks and sub-tasks you would need to complete to create the model on AWS. How would you measure the accuracy of the model you created?**
+**Steps for using SageMaker for Machine Learning:**
 
-- install libraries for running jupyter notebooks and training
+- collect data and formulate the problem (input and target)
 - prepare a sagemaker session:
 
   - get the SageMaker execution role ARN
@@ -234,23 +233,28 @@ https://docs.aws.amazon.com/machine-learning/latest/dg/types-of-ml-models.html
   - preprocess data (data cleaning, data transform, feature scaling: create categorical variables, convert categorical variables to dummy variables, drop columns, convert boolean columns to numeric)
   - split into training, validation and test dataset
   - upload train and validation datasets to S3 bucket
-- select a machine learning model
+- select a machine learning model:
+
+  - classification: logistic regression, decision tree, random forest, XGBoost, neural network
+  - regression: linear regression, regression tree, XGBoost
 - set up tuning job name and configuration (hyperparameters ranges, tuning strategy, total number of training jobs, max number of parallel jobs, metrics used for tuning)
 - specify the machine learning algorithm used for tuning job (retrieve training image, specify S3 paths for datasets, define input data for training and validation channels, specify output location, define compute resou1rces, specify IAM role, static hyperparameters for the algorithm, stopping condition)
-- launch the tuning job: train the model using training set and tuning hyperparameters using validation set
-- evaluated the model using test dataset, use metrics like AUC score, f1, precision, recall
+- launch the tuning job: train the model using training set and tune hyperparameters using validation set
+- evaluate the model on test dataset, use metrics like AUC score, f1, precision, recall
+- check if the result support the theory/achieve our goal
 
-Using evaluation metrics to assess the accuracy of each model:
+**How to evaluate the model:**
 
-- Binary classification – Accuracy, Precision, AUC
-- Multiclass classification – Precision, Recall, F1, AUC
-- Regression – RMSE, Accuracy
+* Select evaluation metrics:
+  - Binary classification – Accuracy (balanced dataset), Precision, recall, F1, AUC
+  - Multiclass classification – Precision, Recall, F1, AUC
+  - Regression – RMSE, Accuracy
+* Compare the results of training and testing set under each evaluation metric to see if any overfitting issues exist
+* Compare the results of the selected model and a single variable model under each evaluation metric to see if the selected model has a good performance.
 
 ## Architecture
 
 **Describe the different ways in which a Microservice Architecture can be implemented on AWS and what the benefits of this approach might be. How could authentication and authorisation be handled in this approach?**
-
-
 
 ## DevOps
 
@@ -273,3 +277,58 @@ How to implement:
 6. Using AWS Chef to manage machines. stacks, layers and applications can be established.
 
 - A layer with a recipe specifies one category of software. Edit our own chef recipe. In the instance interface, we can manage EC2 instances for the particular layer. EC2 will install and configure software according to chef recipe after it starts.
+
+**Serverless Architecture:**
+
+Compute:
+
+* AWS Lambda : Executes video processing tasks on-demand, ideal for infrequent use.
+
+Storage:
+
+* Amazon S3 : Stores videos and metadata, integrates with Lambda, and optimises storage costs.
+
+API Management:
+
+* API Gateway : Exposes a REST API to trigger Lambda functions for user requests.
+
+Database:
+
+* DynamoDB/Aurora Serverless : Scalable storage for metadata or user data, handling varying usage efficiently.
+
+**Pros and Cons of serverless services (lambda, S3):**
+
+pros:
+
+* **Cost Efficiency** : Pay only for actual use, ideal for predictable workloads.
+* **Scalability** : scale automatically with demand.
+* **Reduced Overhead** : AWS manages infrastructure, allowing focus on development.
+* **Reliability** : increase fault tolerance and high availability.
+
+cons:
+
+* **Cold Start Latency** : Occasional delays for inactive functions.
+* **Execution Limits** : 15-minute limit on Lambda tasks.
+* **Workflow Complexity** : Event-driven setups can be harder to debug.
+* **Limited Control** : Less customisation than EC2-managed environments.
+
+
+## Cloud Services
+
+**Provide 5 pros and 5 cons of moving infrastructure from being on-premises to cloud based. Consider this in the context of global expansion and resilience. Provide your answer as a list of bullet points.**
+
+pros 
+
+1. cloud-based systems have higher scalability, compared to data centres.
+2. cost of using and maintaining a cloud based infrastructure are much cheaper than data centres, pay as you go, no upfront investment
+3. lower latency: given that cloud are distributed aboud the globe, services can operate faster in Asia and China for an Australian based company
+4. more resource-saving compare to data centres since it scales according to demand
+5. cloud are easy to recover from incidents and easy to back up as compared to data centres
+
+cons:
+
+1. local government regulations may not support cloud based technologies (China donot support their own data stored on clouds that are based outside of China)
+2. data centre are more secure than using clouds, given that data centre are fully owned by the company, and therefore data will be stored fully by the company, whereas for cloud based, data have to upload to clouds, where data are exposed to leakage, especially when using dockers.
+3. data centres can achieve more customised services compared to cloud, given that data centres are fully owned by the company, whereas cloud based can only use the services provided by the cloud.
+4. change on to cloud based is challenging for accounting departments
+5. once a cloud service is chosen (e.g. google cloud or AWS) it is hard to shift to other cloud or their own databse if the company find the services provided is unsatiisfying

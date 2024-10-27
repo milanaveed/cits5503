@@ -25,7 +25,6 @@ XaaS cloud computing:
 
 ## **DevOps, Security, Networking**
 
-
 **[18] [10 Points] Describe 2 ways in which security is implemented in AWS networks at the network level. What are the similarities and differences between these 2 security implementations?**
 
 https://www.knowledgehut.com/tutorials/aws/nacl-vs-security-groups#:~:text=Security%20groups%20are%20associated%20with,firewall%20to%20protect%20EC2%20instances.
@@ -45,8 +44,6 @@ Network ACLs: it allows or denies specific traffic to reach and leave the resour
 4. rules are applied in the order of their priority.
 
 ![image](sg-nacl.png)
-
--
 
 ## **Storage, Database in AWS**
 
@@ -110,3 +107,21 @@ Similarities:
 3. S3 stores all objects with data and metadata in the bucket, whereas DynamoDB is a NoSQL database storing key-value pairs.
 4. S3 mainly stores media files such as images, videos, sound files etc., while DynamoDB mainly stores document-based files.
 5. S3 has the version control mechanism while DynamoDB doesn't.
+
+
+**[22] [10 points] Describe the different ways in which a Microservice Architecture can be implemented on AWS and what the benefits of this approach might be. How could authentication and authorisation be handled in this approach?**
+
+Microservices can be hosted on Lambda (Serverless), Containers, or can be other Django/Ruby/NodeJS apps.
+
+Front end is via an API Gateway that defines a programmatic interface to the services
+
+Benefits of Rest API based API Gateway are:
+
+- Language agnostic
+- Maintains an interface that encapsulates implementation
+- Can use SQS to allow queues to invoke APIs
+  Need to handle authentication and authorisation for the API
+- Use IAM either directly or through API Gateway Resource Policies
+- Use Cognito
+- Use API keys
+- Use an external service through Lambda
