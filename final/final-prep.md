@@ -124,7 +124,7 @@ To connect to other networks:
 
 - Use Case : Used for broader control of subnet traffic, such as blocking specific IP ranges from accessing an entire subnet.
 
-## **ALB (load balancing)**
+## **ALB (load balancing)/Django**
 
 **Steps to create an ALB for EC2 instances in two different availability zones**:
 
@@ -152,7 +152,7 @@ To connect to other networks:
 3. install django, create a django project and create a django app
 4. install nginx and configure nginx, restart nginx
 5. setup the django app (register the app in settings.py, update views.py and urls.py)
-6. (enable template rendering and render templates with retrieved data)
+6. (if retrieve data from database and use templates: in views.py, pass variables from DynamoDB call and render the template with retrieved data)
 7. run the web server and access the app through the EC2 instance's public IP address
 8. create an ALB by specifying name, subnets, security group, scheme (internet-facing or internal), IP address type (IPv4 or dualstack).
 9. create and configure target group by specifying name, protocol to use (HTTP), port to forward traffic (80), vpc id, port to use for health check, health check interval, health check path, target type.
@@ -197,7 +197,6 @@ https://docs.aws.amazon.com/machine-learning/latest/dg/types-of-ml-models.html
 "For this product, how many units will sell?"
 
 "What price will this house sell for?"
-
 
 **Steps for using SageMaker for Machine Learning:**
 
@@ -258,7 +257,7 @@ s3.upload_file(Filename, Bucket, Key): (local file path, bucket name, destinatio
 - use CloudWatch to monitor performance metrics for services and logging
 - API Gateway routes requests to Lambda
 
-## DevOps
+## DevOps/Fabric/Django
 
 **What is DevOps and describe how you would implement the automation of creation of machines, configuration of software and deployment of application programs using AWS.**
 
