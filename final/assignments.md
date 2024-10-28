@@ -32,7 +32,7 @@ Principles to consider:
 
 1. **Least Privilege** : Grant users only the permissions they need to perform their tasks. In this case, each department's users need read access to all folders and write access only to their department's folder.
 2. **Resource-based policies** : Define policies that restrict access based on the IAM paths and folder names in the bucket.
-3. **Granular Access Control** : Ensure that permissions are granular/specific enough to allow specific access based on the bucket's folder structure.
+3. **Granular Access Control** : Ensure that permissions are specific enough to allow specific access based on the bucket's folder structure.
 4. **Path-based Permissions** : Use path-based folder structures in the S3 bucket to restrict write permissions based on the user's department.
 5. **Read-Only Access for All** : Grant read permissions to all departments across the entire bucket to support the requirement that everyone can read from all folders.
 
@@ -101,6 +101,8 @@ To connect to other networks:
 
 **Describe 2 ways in which security is implemented in AWS networks at the network level. What are the similarities and differences between these 2 security implementations?**
 
+2 ways of implementing security: security group and network access control lists.
+
 **Similarities**:
 
 * Both control **inbound and outbound traffic** and use IP addresses and port rules.
@@ -128,7 +130,7 @@ To connect to other networks:
 
 1. create and configure security group by authorising inbound traffic for SSH and HTTP.
 2. get availability zones in the region
-3. create a key pair
+3. create a key pair for future ssh connection
 4. create EC2 instances by specifying instance type, security group and availability zones
 5. get available subnets in the region
 6. create a load balancer by specifying name, subnets, security group, scheme (internet-facing or internal), IP address type (IPv4 or dualstack).
@@ -149,12 +151,13 @@ To connect to other networks:
 2. install virtual environment package, set up a virtual environment, activate the virtual environment
 3. install django, create a django project and create a django app
 4. install nginx and configure nginx, restart nginx
-5. edit Django files (views.py and urls.py)
-6. run the web server and access the app through the EC2 instance's public IP address
-7. create an ALB by specifying name, subnets, security group, scheme (internet-facing or internal), IP address type (IPv4 or dualstack).
-8. create and configure target group by specifying name, protocol to use (HTTP), port to forward traffic (80), vpc id, port to use for health check, health check interval, health check path, target type.
-9. register targets for the configured target group
-10. create and configure listener by specifying load balancer arn, protocol, port, and action (forward HTTP requests to the target group)
+5. setup the django app (register the app in settings.py, update views.py and urls.py)
+6. (enable template rendering and render templates with retrieved data)
+7. run the web server and access the app through the EC2 instance's public IP address
+8. create an ALB by specifying name, subnets, security group, scheme (internet-facing or internal), IP address type (IPv4 or dualstack).
+9. create and configure target group by specifying name, protocol to use (HTTP), port to forward traffic (80), vpc id, port to use for health check, health check interval, health check path, target type.
+10. register targets for the configured target group
+11. create and configure listener by specifying load balancer arn, protocol, port, and action (forward HTTP requests to the target group)
 
 ## ML/AI
 
@@ -199,25 +202,25 @@ https://docs.aws.amazon.com/machine-learning/latest/dg/types-of-ml-models.html
 **Steps for using SageMaker for Machine Learning:**
 
 1. collect data and formulate the problem (input and target)
-1. prepare a sagemaker session:
+2. prepare a sagemaker session:
 
    - get the SageMaker execution role ARN
    - create a S3 bucket for holding input and output
-1. prepare dataset:
+3. prepare dataset:
 
    - collect labelled data and setup a target variable and a list of feature variables
    - preprocess data (data cleaning, data transform, feature scaling: create categorical variables, convert categorical variables to dummy variables, drop columns, convert boolean columns to numeric)
    - split into training, validation and test dataset
    - upload train and validation datasets to S3 bucket
-1. select a machine learning model:
+4. select a machine learning model:
 
    - classification: logistic regression, decision tree, random forest, XGBoost, neural network
    - regression: linear regression, regression tree, XGBoost
-1. set up tuning job name and configuration (hyperparameters ranges, tuning strategy, total number of training jobs, max number of parallel jobs, metrics used for tuning)
-1. specify the machine learning algorithm used for tuning job (retrieve training image, specify S3 paths for datasets, define input data for training and validation channels, specify output location, define compute resou1rces, specify IAM role, static hyperparameters for the algorithm, stopping condition)
-1. launch the tuning job: train the model using training set and tune hyperparameters using validation set
-1. evaluate the model on test dataset, use metrics like AUC score, f1, precision, recall
-1. check if the result support the theory/achieve our goal
+5. set up tuning job name and configuration (hyperparameters ranges, tuning strategy, total number of training jobs, max number of parallel jobs, metrics used for tuning)
+6. specify the machine learning algorithm used for tuning job (retrieve training image, specify S3 paths for datasets, define input data for training and validation channels, specify output location, define compute resou1rces, specify IAM role, static hyperparameters for the algorithm, stopping condition)
+7. launch the tuning job: train the model using training set and tune hyperparameters using validation set
+8. evaluate the model on test dataset, use metrics like AUC score, f1, precision, recall
+9. check if the result support the theory/achieve our goal
 
 **How to evaluate the model:**
 
@@ -227,7 +230,6 @@ https://docs.aws.amazon.com/machine-learning/latest/dg/types-of-ml-models.html
   - Regression – RMSE, Accuracy
 * Compare the results of training and testing set under each evaluation metric to see if any overfitting issues exist
 * Compare the results of the selected model and a single variable model under each evaluation metric to see if the selected model has a good performance.
-
 
 **Entities**: pieces of information extracted from texts. They are _objects, concepts, or categories_ such as places, organisations, names, dates, and quantities. For example, "Sam was born in France," "Sam" is a person, "France" is location. These are entities in this sentence.
 
@@ -274,10 +276,9 @@ How to implement:
 3. Using AWS CodePipeline to perform Continuous Integration/Continuous Delivery (CI & CD) service for updating code.
 4. Using AWS CodeBuild to compile source code, run tests, and produce software packages.
 5. Using AWS CodeDeploy to test and deploy new code.
-6. Using AWS Chef to manage machines. stacks, layers and applications can be established.
-
-- A layer with a recipe specifies one category of software. Edit our own chef recipe. In the instance interface, we can manage EC2 instances for the particular layer. EC2 will install and configure software according to chef recipe after it starts.
-
+6. Using AWS CloudWatch to automate monitoring and logging, enabling alerting, error detection, and performance insights for rapid issue resolution.
+7. Use ELB to automatically adjust resources based on demand, maintaining reliability and availability.
+8. Use AWS IAM for access control, use Secrets Manager for managing credentials, and enforce least-privilege access across resources.
 
 **Use Fabric to automate the setup of a Python 3 virtual environment, nginx and a Django app within the EC2 instance we created**:
 
@@ -290,7 +291,6 @@ How to implement:
 7. install nginx and configure nginx, restart nginx
 8. edit Django files (views.py and urls.py)
 9. run the web server and access the app through the EC2 instance's public IP address
-
 
 **Serverless Architecture:**
 
@@ -344,7 +344,6 @@ A  software  developer  wants  to  create  a  Drobox-like  application  for  Pho
   * S3 access: allow each user to upload, view, and delete files in their S3 directory
   * DynamoDB access: enable users to manage their [image metadata]
 
-
 **Questions:**
 
 A MedTech company in Perth has created a novel algorithm for detecting heart diseases from X-rays and CT scans  (medical  images)  using  machine  learning  and  computer  vision.  The  company  now  wants  to commercialise it as a Software-as-a-service (SaaS) product. Initially, this product should allow authorised radiologist working at the Royal Perth Hospital to upload such images. Then, once the algorithm can process the image (it could take a couple of minutes) it should retrieve the prediction.   The solution should be scalable so it can be used in other hospitals in the future.
@@ -360,7 +359,6 @@ A MedTech company in Perth has created a novel algorithm for detecting heart dis
 * use CloudWatch for monitoring and logging: monitor application performance, prediction latency, user activity, setting up alerts for failures or anomalies
 * Use AWS KMS for managing encryption keys, ensuring compliance with [medical data protection regulations]
 * use DynamoDB to store [image metadata and prediction results]
-
 
 ## Cloud Services pros and cons
 
